@@ -9,10 +9,24 @@ use App\Models\Student;
 use App\Models\StudentScore;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class AhpService
 {
     public const DEFAULT_PERIOD = 'Genap 2026';
+    public const MAX_CONSISTENCY_RATIO = 0.1;
+    public const INDEX_RANDOM = [
+        1 => 0.0,
+        2 => 0.0,
+        3 => 0.58,
+        4 => 0.90,
+        5 => 1.12,
+        6 => 1.24,
+        7 => 1.32,
+        8 => 1.41,
+        9 => 1.45,
+        10 => 1.49,
+    ];
 
     /**
      * @param array<string, numeric> $comparisons
@@ -56,6 +70,12 @@ class AhpService
 
     public function calculateRanking(string $period = self::DEFAULT_PERIOD): array
     {
+        $consistency = $this->currentConsistency();
+
+        if (! $consistency['is_consistent']) {
+            throw new RuntimeException('Matriks perbandingan kriteria tidak konsisten.');
+        }
+
         return DB::transaction(function () use ($period) {
             $criteria = Criterion::query()->orderBy('id')->get();
             $students = Student::query()
@@ -102,16 +122,19 @@ class AhpService
         });
     }
 
-    public function rankingRows(string $period = self::DEFAULT_PERIOD): array
+    public function rankingRows(string $period = self::DEFAULT_PERIOD, bool $includeDeletedCriteria = false): array
     {
-        $criteria = Criterion::query()->orderBy('id')->get();
+        $criteria = Criterion::query()
+            ->when($includeDeletedCriteria, fn ($query) => $query->withTrashed())
+            ->orderBy('id')
+            ->get();
         $results = AhpResult::query()
             ->with(['student.scores' => fn ($query) => $query->where('evaluation_period', $period)])
             ->where('evaluation_period', $period)
             ->orderBy('rank_position')
             ->get();
 
-        if ($results->isEmpty()) {
+        if ($results->isEmpty() && $this->isMatrixConsistent()) {
             $this->calculateRanking($period);
 
             $results = AhpResult::query()
@@ -121,7 +144,11 @@ class AhpService
                 ->get();
         }
 
-        return $results->map(fn (AhpResult $result) => $this->studentRow($result->student, $criteria, $period, $result))->all();
+        return $results
+            ->map(fn (AhpResult $result) => $result->student ? $this->studentRow($result->student, $criteria, $period, $result) : null)
+            ->filter()
+            ->values()
+            ->all();
     }
 
     public function studentScoreRows(string $period = self::DEFAULT_PERIOD): array
@@ -150,10 +177,44 @@ class AhpService
         return (int) round(($scoreCount / ($studentCount * $criteriaCount)) * 100);
     }
 
+    public function standardizeAlternativeScore(float $rawScore): int
+    {
+        if ($rawScore > 85) {
+            return 5;
+        }
+
+        if ($rawScore >= 75) {
+            return 4;
+        }
+
+        return 3;
+    }
+
+    public function currentConsistency(): array
+    {
+        return $this->calculateWeights(Criterion::query()->orderBy('id')->get());
+    }
+
+    public function isMatrixConsistent(): bool
+    {
+        return $this->currentConsistency()['is_consistent'];
+    }
+
     private function calculateWeights(Collection $criteria): array
     {
         $comparisons = AhpComparison::query()->get()->keyBy(fn (AhpComparison $comparison) => $comparison->criterion_a_id.'_'.$comparison->criterion_b_id);
         $ids = $criteria->pluck('id')->all();
+
+        if (count($ids) === 0) {
+            return [
+                'priorities' => [],
+                'lambda_max' => 0.0,
+                'consistency_index' => 0.0,
+                'consistency_ratio' => 0.0,
+                'is_consistent' => true,
+            ];
+        }
+
         $matrix = [];
         $columnSums = array_fill_keys($ids, 0.0);
 
@@ -188,15 +249,17 @@ class AhpService
         $lambdaMax /= count($ids);
 
         $n = count($ids);
-        $consistencyIndex = $n > 1 ? (($lambdaMax - $n) / ($n - 1)) : 0;
-        $randomIndex = [1 => 0, 2 => 0, 3 => 0.58, 4 => 0.90, 5 => 1.12][$n] ?? 1.12;
-        $consistencyRatio = $randomIndex > 0 ? $consistencyIndex / $randomIndex : 0;
+        $consistencyIndex = $n > 1 ? max(0, (($lambdaMax - $n) / ($n - 1))) : 0;
+        $randomIndex = self::INDEX_RANDOM[$n] ?? self::INDEX_RANDOM[10];
+        $consistencyRatio = $randomIndex > 0 ? max(0, $consistencyIndex / $randomIndex) : 0;
+        $roundedConsistencyRatio = round($consistencyRatio, 4);
 
         return [
             'priorities' => $priorities,
             'lambda_max' => round($lambdaMax, 4),
             'consistency_index' => round($consistencyIndex, 4),
-            'consistency_ratio' => round($consistencyRatio, 4),
+            'consistency_ratio' => $roundedConsistencyRatio,
+            'is_consistent' => $roundedConsistencyRatio <= self::MAX_CONSISTENCY_RATIO,
         ];
     }
 
@@ -220,9 +283,12 @@ class AhpService
         ];
 
         foreach ($criteria as $criterion) {
-            $value = $scores->get($criterion->id)?->score;
+            $score = $scores->get($criterion->id);
+            $value = $score?->score;
             $row['scores'][$criterion->id] = $value;
+            $row['raw_scores'][$criterion->id] = $score?->raw_score ?? $value;
             $row[$criterion->code] = $value ?? 0;
+            $row[$criterion->code.'_raw'] = $score?->raw_score ?? $value ?? 0;
         }
 
         return $row;

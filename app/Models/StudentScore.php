@@ -11,23 +11,25 @@ class StudentScore extends Model
         'student_id',
         'criterion_id',
         'evaluation_period',
+        'raw_score',
         'score',
     ];
 
     protected function casts(): array
     {
         return [
+            'raw_score' => 'float',
             'score' => 'float',
         ];
     }
 
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class)->withTrashed();
     }
 
     public function criterion(): BelongsTo
     {
-        return $this->belongsTo(Criterion::class);
+        return $this->belongsTo(Criterion::class)->withTrashed();
     }
 }

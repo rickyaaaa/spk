@@ -7,6 +7,9 @@
     @if (session('success'))
         <div class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{{ session('success') }}</div>
     @endif
+    @if (session('error'))
+        <div class="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{{ session('error') }}</div>
+    @endif
     @if ($errors->any())
         <div class="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{{ $errors->first() }}</div>
     @endif
@@ -68,11 +71,16 @@
             </form>
 
             <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                Nilai perbandingan mengikuti skala AHP 1 sampai 9. Frontend ini menampilkan struktur inputnya; validasi konsistensi dapat disambungkan ke engine AHP Laravel.
+                Nilai perbandingan mengikuti skala AHP 1 sampai 9. Matriks dianggap valid jika Consistency Ratio (CR) maksimal 0.1.
             </div>
             @if ($consistency)
-                <div class="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-700">
-                    Lambda max {{ $consistency['lambda_max'] }}, CI {{ $consistency['consistency_index'] }}, CR {{ $consistency['consistency_ratio'] }}.
+                <div class="mt-3 rounded-lg border {{ $consistency['is_consistent'] ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700' }} p-4 text-sm font-semibold leading-6">
+                    @if (! $consistency['is_consistent'])
+                        Matriks Perbandingan Tidak Konsisten! Silakan isi kembali nilai perbandingan.
+                    @else
+                        Matriks perbandingan konsisten.
+                    @endif
+                    <span class="block font-normal">Lambda max {{ $consistency['lambda_max'] }}, CI {{ $consistency['consistency_index'] }}, CR {{ $consistency['consistency_ratio'] }}.</span>
                 </div>
             @endif
         </section>

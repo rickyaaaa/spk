@@ -22,11 +22,11 @@ class AhpComparison extends Model
 
     public function criterionA(): BelongsTo
     {
-        return $this->belongsTo(Criterion::class, 'criterion_a_id');
+        return $this->belongsTo(Criterion::class, 'criterion_a_id')->withTrashed();
     }
 
     public function criterionB(): BelongsTo
     {
-        return $this->belongsTo(Criterion::class, 'criterion_b_id');
+        return $this->belongsTo(Criterion::class, 'criterion_b_id')->withTrashed();
     }
 }

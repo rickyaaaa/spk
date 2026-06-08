@@ -43,6 +43,8 @@ class DatabaseSeeder extends Seeder
             ['nis' => '2624005', 'name' => 'Eka Safitri', 'class_name' => 'Paket B - VIII', 'scores' => ['rapor' => 80, 'tugas' => 85, 'kehadiran' => 88]],
         ];
 
+        $ahpService = app(AhpService::class);
+
         foreach ($students as $studentData) {
             $student = Student::query()->updateOrCreate(
                 ['nis' => $studentData['nis']],
@@ -62,19 +64,22 @@ class DatabaseSeeder extends Seeder
                         'criterion_id' => $criterion->id,
                         'evaluation_period' => AhpService::DEFAULT_PERIOD,
                     ],
-                    ['score' => $score]
+                    [
+                        'raw_score' => $score,
+                        'score' => $ahpService->standardizeAlternativeScore($score),
+                    ]
                 );
             }
         }
 
         $criteriaByCode = Criterion::query()->get()->keyBy('code');
 
-        app(AhpService::class)->updateWeights([
+        $ahpService->updateWeights([
             $criteriaByCode['rapor']->id.'_'.$criteriaByCode['tugas']->id => 3,
             $criteriaByCode['rapor']->id.'_'.$criteriaByCode['kehadiran']->id => 5,
             $criteriaByCode['tugas']->id.'_'.$criteriaByCode['kehadiran']->id => 3,
         ]);
 
-        app(AhpService::class)->calculateRanking(AhpService::DEFAULT_PERIOD);
+        $ahpService->calculateRanking(AhpService::DEFAULT_PERIOD);
     }
 }

@@ -45,15 +45,30 @@ class ScoreController extends Controller
                     continue;
                 }
 
+                if (! Criterion::query()->whereKey($criterionId)->exists()) {
+                    continue;
+                }
+
+                $rawScore = (float) $score;
+
                 StudentScore::query()->updateOrCreate(
                     [
                         'student_id' => $studentId,
                         'criterion_id' => $criterionId,
                         'evaluation_period' => $validated['period'],
                     ],
-                    ['score' => $score]
+                    [
+                        'raw_score' => $rawScore,
+                        'score' => $this->ahpService->standardizeAlternativeScore($rawScore),
+                    ]
                 );
             }
+        }
+
+        if (! $this->ahpService->isMatrixConsistent()) {
+            return redirect()
+                ->route('scores.index')
+                ->with('error', 'Nilai siswa berhasil disimpan, tetapi ranking belum dihitung karena matriks perbandingan tidak konsisten.');
         }
 
         $this->ahpService->calculateRanking($validated['period']);

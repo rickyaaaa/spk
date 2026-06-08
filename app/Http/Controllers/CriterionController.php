@@ -20,7 +20,7 @@ class CriterionController extends Controller
         return view('criteria.index', [
             'criteria' => Criterion::query()->orderBy('id')->get(),
             'comparisons' => AhpComparison::query()->get()->keyBy(fn (AhpComparison $comparison) => $comparison->criterion_a_id.'_'.$comparison->criterion_b_id),
-            'consistency' => session('consistency'),
+            'consistency' => session('consistency', $this->ahpService->currentConsistency()),
         ]);
     }
 
@@ -33,9 +33,14 @@ class CriterionController extends Controller
 
         $consistency = $this->ahpService->updateWeights($validated['comparisons']);
 
-        return redirect()
+        $redirect = redirect()
             ->route('criteria.index')
-            ->with('success', 'Bobot kriteria AHP berhasil diperbarui.')
             ->with('consistency', $consistency);
+
+        if (! $consistency['is_consistent']) {
+            return $redirect->with('error', 'Matriks Perbandingan Tidak Konsisten! Silakan isi kembali nilai perbandingan.');
+        }
+
+        return $redirect->with('success', 'Bobot kriteria AHP berhasil diperbarui dan matriks sudah konsisten.');
     }
 }

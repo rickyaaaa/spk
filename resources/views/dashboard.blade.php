@@ -37,9 +37,9 @@
                         <tr>
                             <th class="px-5 py-3">Peringkat</th>
                             <th class="px-5 py-3">Siswa</th>
-                            <th class="px-5 py-3">Rapor</th>
-                            <th class="px-5 py-3">Tugas</th>
-                            <th class="px-5 py-3">Kehadiran</th>
+                            @foreach ($criteria as $criterion)
+                                <th class="px-5 py-3">{{ $criterion->name }}</th>
+                            @endforeach
                             <th class="px-5 py-3 text-right">Skor Akhir</th>
                         </tr>
                     </thead>
@@ -53,9 +53,9 @@
                                     <p class="font-semibold text-zinc-950">{{ $student['name'] }}</p>
                                     <p class="text-xs text-zinc-500">{{ $student['nis'] }} - {{ $student['class_name'] }}</p>
                                 </td>
-                                <td class="px-5 py-4">{{ $student['rapor'] }}</td>
-                                <td class="px-5 py-4">{{ $student['tugas'] }}</td>
-                                <td class="px-5 py-4">{{ $student['kehadiran'] }}%</td>
+                                @foreach ($criteria as $criterion)
+                                    <td class="px-5 py-4">{{ $student[$criterion->code] ?? 0 }}</td>
+                                @endforeach
                                 <td class="px-5 py-4 text-right font-bold text-emerald-700">{{ number_format($student['score'], 2) }}</td>
                             </tr>
                         @endforeach

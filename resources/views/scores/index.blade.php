@@ -7,6 +7,9 @@
     @if (session('success'))
         <div class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{{ session('success') }}</div>
     @endif
+    @if (session('error'))
+        <div class="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{{ session('error') }}</div>
+    @endif
     @if ($errors->any())
         <div class="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{{ $errors->first() }}</div>
     @endif
@@ -18,7 +21,7 @@
         <div class="flex flex-col gap-3 border-b border-zinc-200 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h2 class="text-lg font-bold">Form Nilai Periode {{ $period }}</h2>
-                <p class="mt-1 text-sm text-zinc-500">Masukkan nilai aktual siswa berdasarkan kriteria aktif.</p>
+                <p class="mt-1 text-sm text-zinc-500">Masukkan nilai mentah 0-100. Sistem otomatis mengubahnya ke skor AHP 1-5.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
@@ -51,7 +54,7 @@
                             </td>
                             @foreach ($criteria as $criterion)
                                 <td class="px-5 py-4">
-                                    <input name="scores[{{ $student['id'] }}][{{ $criterion->id }}]" value="{{ old('scores.'.$student['id'].'.'.$criterion->id, $student['scores'][$criterion->id] ?? '') }}" class="h-10 w-28 rounded-lg border border-zinc-200 px-3 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                                    <input name="scores[{{ $student['id'] }}][{{ $criterion->id }}]" value="{{ old('scores.'.$student['id'].'.'.$criterion->id, $student['raw_scores'][$criterion->id] ?? '') }}" class="h-10 w-28 rounded-lg border border-zinc-200 px-3 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
                                 </td>
                             @endforeach
                             <td class="px-5 py-4">
