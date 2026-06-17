@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
                     ],
                     [
                         'raw_score' => $score,
-                        'score' => $ahpService->standardizeAlternativeScore($score),
+                        'score' => $score,
                     ]
                 );
             }

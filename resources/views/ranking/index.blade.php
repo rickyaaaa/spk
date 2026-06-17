@@ -17,7 +17,7 @@
     @endif
     @if (! $isConsistent)
         <div class="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
-            Matriks Perbandingan Tidak Konsisten! Silakan isi kembali nilai perbandingan.
+            Matriks Perbandingan Kriteria AHP Tidak Konsisten! Perangkingan SAW tidak dapat dijalankan.
         </div>
     @endif
 
@@ -33,9 +33,9 @@
                 </div>
             </div>
             <div class="mt-6 rounded-lg bg-zinc-950 p-5 text-white">
-                <p class="text-sm text-zinc-300">Skor akhir AHP</p>
+                <p class="text-sm text-zinc-300">Skor preferensi AHP-SAW</p>
                 <p class="mt-2 text-5xl font-bold">{{ number_format($topStudent['score'] ?? 0, 2) }}</p>
-                <p class="mt-3 text-sm leading-6 text-zinc-300">Siswa ini memiliki kombinasi nilai standar dan bobot kriteria tertinggi pada periode evaluasi.</p>
+                <p class="mt-3 text-sm leading-6 text-zinc-300">Siswa ini memiliki nilai preferensi tertinggi dari normalisasi SAW dan bobot kriteria AHP.</p>
             </div>
             <form action="{{ route('ranking.calculate') }}" method="POST">
                 @csrf

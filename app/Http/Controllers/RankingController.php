@@ -20,7 +20,7 @@ class RankingController extends Controller
 
         return view('ranking.index', [
             'students' => $this->ahpService->rankingRows($period),
-            'criteria' => Criterion::query()->orderBy('id')->get(),
+            'criteria' => Criterion::query()->withTrashed()->orderBy('id')->get(),
             'period' => $period,
             'consistency' => $consistency,
         ]);
@@ -31,11 +31,11 @@ class RankingController extends Controller
         if (! $this->ahpService->isMatrixConsistent()) {
             return redirect()
                 ->route('ranking.index')
-                ->with('error', 'Matriks Perbandingan Tidak Konsisten! Silakan isi kembali nilai perbandingan.');
+                ->with('error', 'Matriks Perbandingan Kriteria AHP Tidak Konsisten! Perangkingan SAW tidak dapat dijalankan.');
         }
 
-        $this->ahpService->calculateRanking(AhpService::DEFAULT_PERIOD);
+        $this->ahpService->calculateFinalRanking(AhpService::DEFAULT_PERIOD);
 
-        return redirect()->route('ranking.index')->with('success', 'Perankingan berhasil dihitung ulang.');
+        return redirect()->route('ranking.index')->with('success', 'Perankingan SAW berhasil dihitung ulang.');
     }
 }

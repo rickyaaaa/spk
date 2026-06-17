@@ -59,7 +59,7 @@ class ScoreController extends Controller
                     ],
                     [
                         'raw_score' => $rawScore,
-                        'score' => $this->ahpService->standardizeAlternativeScore($rawScore),
+                        'score' => $rawScore,
                     ]
                 );
             }
@@ -68,7 +68,7 @@ class ScoreController extends Controller
         if (! $this->ahpService->isMatrixConsistent()) {
             return redirect()
                 ->route('scores.index')
-                ->with('error', 'Nilai siswa berhasil disimpan, tetapi ranking belum dihitung karena matriks perbandingan tidak konsisten.');
+                ->with('error', 'Nilai siswa berhasil disimpan, tetapi Matriks Perbandingan Kriteria AHP Tidak Konsisten! Perangkingan SAW tidak dapat dijalankan.');
         }
 
         $this->ahpService->calculateRanking($validated['period']);

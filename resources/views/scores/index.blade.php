@@ -21,7 +21,7 @@
         <div class="flex flex-col gap-3 border-b border-zinc-200 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h2 class="text-lg font-bold">Form Nilai Periode {{ $period }}</h2>
-                <p class="mt-1 text-sm text-zinc-500">Masukkan nilai mentah 0-100. Sistem otomatis mengubahnya ke skor AHP 1-5.</p>
+                <p class="mt-1 text-sm text-zinc-500">Masukkan nilai mentah 0-100. Normalisasi dilakukan otomatis oleh metode SAW saat perangkingan.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">

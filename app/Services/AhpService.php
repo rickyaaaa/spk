@@ -70,35 +70,58 @@ class AhpService
 
     public function calculateRanking(string $period = self::DEFAULT_PERIOD): array
     {
+        return $this->calculateFinalRanking($period);
+    }
+
+    public function calculateFinalRanking(string $period = self::DEFAULT_PERIOD): array
+    {
         $consistency = $this->currentConsistency();
 
         if (! $consistency['is_consistent']) {
-            throw new RuntimeException('Matriks perbandingan kriteria tidak konsisten.');
+            throw new RuntimeException('Matriks Perbandingan Kriteria AHP Tidak Konsisten! Perangkingan SAW tidak dapat dijalankan.');
         }
 
         return DB::transaction(function () use ($period) {
-            $criteria = Criterion::query()->orderBy('id')->get();
+            $criteria = Criterion::query()
+                ->withTrashed()
+                ->orderBy('id')
+                ->get();
             $students = Student::query()
+                ->withTrashed()
                 ->with(['scores' => fn ($query) => $query->where('evaluation_period', $period)])
                 ->orderBy('name')
                 ->get();
+            $studentIds = $students->pluck('id');
+
+            $maxScoresByCriterion = $criteria->mapWithKeys(function (Criterion $criterion) use ($period, $studentIds) {
+                $maxScore = StudentScore::query()
+                    ->where('criterion_id', $criterion->id)
+                    ->where('evaluation_period', $period)
+                    ->whereIn('student_id', $studentIds)
+                    ->max('raw_score');
+
+                return [$criterion->id => max((float) $maxScore, 0.0001)];
+            });
 
             $ranked = $students
-                ->map(function (Student $student) use ($criteria, $period) {
+                ->map(function (Student $student) use ($criteria, $period, $maxScoresByCriterion) {
                     $scoresByCriterion = $student->scores->keyBy('criterion_id');
 
                     if ($scoresByCriterion->count() < $criteria->count()) {
                         return null;
                     }
 
-                    $finalScore = $criteria->sum(function (Criterion $criterion) use ($scoresByCriterion) {
-                        return (float) $scoresByCriterion[$criterion->id]->score * (float) $criterion->weight;
+                    $finalScore = $criteria->sum(function (Criterion $criterion) use ($scoresByCriterion, $maxScoresByCriterion) {
+                        $rawScore = (float) ($scoresByCriterion[$criterion->id]->raw_score ?? 0);
+                        $normalizedScore = $rawScore / (float) $maxScoresByCriterion[$criterion->id];
+
+                        return $normalizedScore * (float) $criterion->weight;
                     });
 
                     return [
                         'student' => $student,
                         'period' => $period,
-                        'final_score' => round($finalScore, 2),
+                        'final_score' => round($finalScore, 4),
                     ];
                 })
                 ->filter()
@@ -122,7 +145,7 @@ class AhpService
         });
     }
 
-    public function rankingRows(string $period = self::DEFAULT_PERIOD, bool $includeDeletedCriteria = false): array
+    public function rankingRows(string $period = self::DEFAULT_PERIOD, bool $includeDeletedCriteria = true): array
     {
         $criteria = Criterion::query()
             ->when($includeDeletedCriteria, fn ($query) => $query->withTrashed())
@@ -135,7 +158,7 @@ class AhpService
             ->get();
 
         if ($results->isEmpty() && $this->isMatrixConsistent()) {
-            $this->calculateRanking($period);
+            $this->calculateFinalRanking($period);
 
             $results = AhpResult::query()
                 ->with(['student.scores' => fn ($query) => $query->where('evaluation_period', $period)])
@@ -175,19 +198,6 @@ class AhpService
         $scoreCount = StudentScore::query()->where('evaluation_period', $period)->count();
 
         return (int) round(($scoreCount / ($studentCount * $criteriaCount)) * 100);
-    }
-
-    public function standardizeAlternativeScore(float $rawScore): int
-    {
-        if ($rawScore > 85) {
-            return 5;
-        }
-
-        if ($rawScore >= 75) {
-            return 4;
-        }
-
-        return 3;
     }
 
     public function currentConsistency(): array
@@ -284,7 +294,7 @@ class AhpService
 
         foreach ($criteria as $criterion) {
             $score = $scores->get($criterion->id);
-            $value = $score?->score;
+            $value = $score?->raw_score ?? $score?->score;
             $row['scores'][$criterion->id] = $value;
             $row['raw_scores'][$criterion->id] = $score?->raw_score ?? $value;
             $row[$criterion->code] = $value ?? 0;
