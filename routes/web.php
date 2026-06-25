@@ -24,8 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
     Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
-    Route::get('/criteria', [CriterionController::class, 'index'])->name('criteria.index');
-    Route::put('/criteria', [CriterionController::class, 'update'])->name('criteria.update');
+    Route::put('/criteria/comparisons', [CriterionController::class, 'updateComparisons'])->name('criteria.comparisons.update');
+    Route::resource('criteria', CriterionController::class)->except(['create', 'edit']);
 
     Route::get('/scores', [ScoreController::class, 'index'])->name('scores.index');
     Route::put('/scores', [ScoreController::class, 'update'])->name('scores.update');

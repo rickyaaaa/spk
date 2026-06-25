@@ -61,11 +61,11 @@
                     @csrf
                     <label class="block">
                         <span class="text-sm font-semibold text-zinc-700">Email</span>
-                        <input type="email" name="email" value="{{ old('email', 'admin@skb26.sch.id') }}" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                        <input type="email" name="email" value="{{ old('email') }}" autocomplete="username" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
                     </label>
                     <label class="block">
                         <span class="text-sm font-semibold text-zinc-700">Password</span>
-                        <input type="password" name="password" value="password" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                        <input type="password" name="password" autocomplete="current-password" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
                     </label>
                     <div class="flex items-center justify-between text-sm">
                         <label class="flex items-center gap-2 text-zinc-600">

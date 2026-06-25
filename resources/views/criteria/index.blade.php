@@ -16,15 +16,25 @@
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)]">
         <section class="min-w-0 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-            <form action="{{ route('criteria.update') }}" method="POST">
+            <form action="{{ route('criteria.comparisons.update') }}" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="flex items-center justify-between gap-3">
+                <div class="flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <h2 class="text-lg font-bold">Perbandingan Kriteria</h2>
                         <p class="mt-1 text-sm text-zinc-500">Atur tingkat kepentingan antar kriteria penilaian.</p>
+                        <button
+                            id="open-criterion-modal"
+                            type="button"
+                            class="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                            aria-haspopup="dialog"
+                            aria-controls="criterion-modal"
+                        >
+                            <i data-lucide="plus" class="h-4 w-4"></i>
+                            Tambah Kriteria Baru
+                        </button>
                     </div>
-                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white hover:bg-zinc-800">
+                    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50" @disabled($criteria->isEmpty())>
                         <i data-lucide="calculator" class="h-4 w-4"></i>
                         Hitung Bobot
                     </button>
@@ -41,9 +51,31 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-100">
+                            @if ($criteria->isEmpty())
+                                <tr>
+                                    <td colspan="1" class="px-4 py-10 text-center text-zinc-500">Belum ada kriteria. Tambahkan kriteria baru untuk mulai menyusun matriks.</td>
+                                </tr>
+                            @endif
                             @foreach ($criteria as $rowIndex => $rowCriterion)
                                 <tr>
-                                    <td class="px-4 py-4 text-left font-semibold">{{ $rowCriterion->name }}</td>
+                                    <th scope="row" class="px-4 py-4 text-left font-semibold">
+                                        <div class="flex min-w-[170px] items-center justify-between gap-3">
+                                            <span>
+                                                {{ $rowCriterion->name }}
+                                                <span class="ml-1 text-xs font-medium text-zinc-400">({{ $rowCriterion->code }})</span>
+                                            </span>
+                                            <button
+                                                type="submit"
+                                                form="delete-criterion-{{ $rowCriterion->id }}"
+                                                class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-4 focus:ring-red-100"
+                                                title="Hapus {{ $rowCriterion->name }}"
+                                                aria-label="Hapus {{ $rowCriterion->name }}"
+                                                onclick="return confirm('Hapus kriteria ini dari matriks perbandingan?')"
+                                            >
+                                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                            </button>
+                                        </div>
+                                    </th>
                                     @foreach ($criteria as $columnIndex => $columnCriterion)
                                         <td class="px-4 py-4">
                                             @if ($rowIndex === $columnIndex)
@@ -69,6 +101,13 @@
                     </table>
                 </div>
             </form>
+
+            @foreach ($criteria as $criterion)
+                <form id="delete-criterion-{{ $criterion->id }}" action="{{ route('criteria.destroy', $criterion) }}" method="POST" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endforeach
 
             <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
                 Nilai perbandingan mengikuti skala AHP 1 sampai 9. Matriks dianggap valid jika Consistency Ratio (CR) maksimal 0.1.
@@ -106,4 +145,102 @@
             </div>
         </section>
     </div>
+
+    <div id="criterion-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="criterion-modal-title">
+        <div class="absolute inset-0 bg-zinc-950/50 backdrop-blur-sm" data-close-criterion-modal></div>
+        <div class="relative flex min-h-full items-center justify-center p-4">
+            <div class="w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl">
+                <div class="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
+                    <div>
+                        <h2 id="criterion-modal-title" class="text-lg font-bold text-zinc-950">Tambah Kriteria Baru</h2>
+                        <p class="mt-1 text-sm text-zinc-500">Kriteria akan langsung ditambahkan ke matriks AHP.</p>
+                    </div>
+                    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" data-close-criterion-modal aria-label="Tutup modal">
+                        <i data-lucide="x" class="h-5 w-5"></i>
+                    </button>
+                </div>
+
+                <form action="{{ route('criteria.store') }}" method="POST" class="space-y-5 p-6">
+                    @csrf
+                    <div>
+                        <label for="criterion-name" class="mb-2 block text-sm font-semibold text-zinc-700">Nama Kriteria</label>
+                        <input
+                            id="criterion-name"
+                            name="name"
+                            value="{{ old('name') }}"
+                            type="text"
+                            maxlength="255"
+                            required
+                            placeholder="Contoh: Prestasi Ekstrakurikuler"
+                            class="h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
+                        >
+                        @error('name')
+                            <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="criterion-code" class="mb-2 block text-sm font-semibold text-zinc-700">Kode Kriteria</label>
+                        <input
+                            id="criterion-code"
+                            name="code"
+                            value="{{ old('code') }}"
+                            type="text"
+                            maxlength="50"
+                            required
+                            placeholder="Contoh: C4"
+                            class="h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm uppercase outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
+                        >
+                        <p class="mt-2 text-xs text-zinc-500">Gunakan huruf, angka, tanda hubung, atau garis bawah.</p>
+                        @error('code')
+                            <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex justify-end gap-3 border-t border-zinc-100 pt-5">
+                        <button type="button" class="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" data-close-criterion-modal>Batal</button>
+                        <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
+                            <i data-lucide="save" class="h-4 w-4"></i>
+                            Simpan Kriteria
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('criterion-modal');
+            const openButton = document.getElementById('open-criterion-modal');
+            const nameInput = document.getElementById('criterion-name');
+
+            const openModal = () => {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+                window.setTimeout(() => nameInput.focus(), 0);
+            };
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                openButton.focus();
+            };
+
+            openButton.addEventListener('click', openModal);
+            modal.querySelectorAll('[data-close-criterion-modal]').forEach((button) => {
+                button.addEventListener('click', closeModal);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && ! modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+
+            @if ($errors->has('name') || $errors->has('code'))
+                openModal();
+            @endif
+        });
+    </script>
 @endsection
