@@ -24,7 +24,7 @@
                 <p class="mt-1 text-sm text-zinc-500">Masukkan nilai mentah 0-100. Normalisasi dilakukan otomatis oleh metode SAW saat perangkingan.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button id="open-import-modal" type="button" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                <button type="button" onclick="openImportModal()" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
                     <i data-lucide="upload" class="h-4 w-4"></i>
                     Import
                 </button>
@@ -79,7 +79,7 @@
     </section>
 
     <div id="import-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
-        <div class="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm" data-close-import-modal></div>
+        <div class="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm" onclick="closeImportModal()"></div>
         <div class="relative flex min-h-screen items-center justify-center p-4">
             <div class="w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl">
                 <div class="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
@@ -87,7 +87,7 @@
                         <h2 id="import-modal-title" class="text-lg font-bold text-zinc-950">Import Nilai Siswa</h2>
                         <p class="mt-1 text-sm text-zinc-500">Unggah file CSV berisi data nilai siswa.</p>
                     </div>
-                    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" data-close-import-modal aria-label="Tutup modal">
+                    <button type="button" onclick="closeImportModal()" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Tutup modal">
                         <i data-lucide="x" class="h-5 w-5"></i>
                     </button>
                 </div>
@@ -123,7 +123,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-zinc-100 pt-5">
-                        <button type="button" class="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" data-close-import-modal>Batal</button>
+                        <button type="button" onclick="closeImportModal()" class="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">Batal</button>
                         <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                             <i data-lucide="upload" class="h-4 w-4"></i>
                             Upload & Impor
@@ -135,33 +135,28 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        function openImportModal() {
             const modal = document.getElementById('import-modal');
-            const openButton = document.getElementById('open-import-modal');
-
-            const openModal = () => {
+            if (modal) {
                 modal.classList.remove('hidden');
                 document.body.classList.add('overflow-hidden');
-            };
+            }
+        }
 
-            const closeModal = () => {
+        function closeImportModal() {
+            const modal = document.getElementById('import-modal');
+            if (modal) {
                 modal.classList.add('hidden');
                 document.body.classList.remove('overflow-hidden');
-                if (openButton) openButton.focus();
-            };
-
-            if (openButton) {
-                openButton.addEventListener('click', openModal);
             }
-            modal.querySelectorAll('[data-close-import-modal]').forEach((button) => {
-                button.addEventListener('click', closeModal);
-            });
+        }
 
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
-                    closeModal();
-                }
-            });
+        document.addEventListener('keydown', (event) => {
+            const modal = document.getElementById('import-modal');
+            if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+                closeImportModal();
+            }
         });
     </script>
 @endsection
+

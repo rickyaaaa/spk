@@ -24,8 +24,8 @@
                         <h2 class="text-lg font-bold">Perbandingan Kriteria</h2>
                         <p class="mt-1 text-sm text-zinc-500">Atur tingkat kepentingan antar kriteria penilaian.</p>
                         <button
-                            id="open-criterion-modal"
                             type="button"
+                            onclick="openCriterionModal()"
                             class="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-100"
                             aria-haspopup="dialog"
                             aria-controls="criterion-modal"
@@ -147,7 +147,7 @@
     </div>
 
     <div id="criterion-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="criterion-modal-title">
-        <div class="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm" data-close-criterion-modal></div>
+        <div class="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm" onclick="closeCriterionModal()"></div>
         <div class="relative flex min-h-screen items-center justify-center p-4">
             <div class="w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl">
                 <div class="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
@@ -155,7 +155,7 @@
                         <h2 id="criterion-modal-title" class="text-lg font-bold text-zinc-950">Tambah Kriteria Baru</h2>
                         <p class="mt-1 text-sm text-zinc-500">Kriteria akan langsung ditambahkan ke matriks AHP.</p>
                     </div>
-                    <button type="button" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" data-close-criterion-modal aria-label="Tutup modal">
+                    <button type="button" onclick="closeCriterionModal()" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Tutup modal">
                         <i data-lucide="x" class="h-5 w-5"></i>
                     </button>
                 </div>
@@ -198,7 +198,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-zinc-100 pt-5">
-                        <button type="button" class="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" data-close-criterion-modal>Batal</button>
+                        <button type="button" onclick="closeCriterionModal()" class="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">Batal</button>
                         <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                             <i data-lucide="save" class="h-4 w-4"></i>
                             Simpan Kriteria
@@ -210,37 +210,33 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        function openCriterionModal() {
             const modal = document.getElementById('criterion-modal');
-            const openButton = document.getElementById('open-criterion-modal');
-            const nameInput = document.getElementById('criterion-name');
-
-            const openModal = () => {
+            if (modal) {
                 modal.classList.remove('hidden');
                 document.body.classList.add('overflow-hidden');
-                window.setTimeout(() => nameInput.focus(), 0);
-            };
+                const nameInput = document.getElementById('criterion-name');
+                if (nameInput) window.setTimeout(() => nameInput.focus(), 0);
+            }
+        }
 
-            const closeModal = () => {
+        function closeCriterionModal() {
+            const modal = document.getElementById('criterion-modal');
+            if (modal) {
                 modal.classList.add('hidden');
                 document.body.classList.remove('overflow-hidden');
-                openButton.focus();
-            };
+            }
+        }
 
-            openButton.addEventListener('click', openModal);
-            modal.querySelectorAll('[data-close-criterion-modal]').forEach((button) => {
-                button.addEventListener('click', closeModal);
-            });
-
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && ! modal.classList.contains('hidden')) {
-                    closeModal();
-                }
-            });
-
-            @if ($errors->has('name') || $errors->has('code'))
-                openModal();
-            @endif
+        document.addEventListener('keydown', (event) => {
+            const modal = document.getElementById('criterion-modal');
+            if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+                closeCriterionModal();
+            }
         });
+
+        @if ($errors->has('name') || $errors->has('code'))
+            document.addEventListener('DOMContentLoaded', () => openCriterionModal());
+        @endif
     </script>
 @endsection
