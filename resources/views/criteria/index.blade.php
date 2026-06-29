@@ -146,8 +146,8 @@
         </section>
     </div>
 
-    <div id="criterion-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="criterion-modal-title">
-        <div class="absolute inset-0 bg-zinc-950/50 backdrop-blur-sm" data-close-criterion-modal></div>
+    <div id="criterion-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="criterion-modal-title">
+        <div class="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm" data-close-criterion-modal></div>
         <div class="relative flex min-h-full items-center justify-center p-4">
             <div class="w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl">
                 <div class="flex items-start justify-between border-b border-zinc-100 px-6 py-5">

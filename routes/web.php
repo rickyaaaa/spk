@@ -42,3 +42,9 @@ Route::get('/clear-route-cache', function () {
     return 'Route cache berhasil dihapus!';
 });
 
+Route::get('/run-migrations', function () {
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    return 'Database migrations ran successfully!';
+});
+
+
