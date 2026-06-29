@@ -92,6 +92,9 @@ class ScoreController extends Controller
         return new StreamedResponse(function () use ($criteria, $students, $studentScores) {
             $handle = fopen('php://output', 'w');
 
+            // Add Excel separator declaration so Excel splits columns correctly
+            fwrite($handle, "sep=,\n");
+
             $headers = ['nis', 'nama'];
             foreach ($criteria as $criterion) {
                 $headers[] = $criterion->code;
@@ -132,10 +135,41 @@ class ScoreController extends Controller
             return back()->with('error', 'Gagal membuka file CSV.');
         }
 
-        $headers = fgetcsv($handle);
-        if (! $headers) {
+        // Read first line to detect delimiter and check for Excel sep= line
+        $firstLine = fgets($handle);
+        if (!$firstLine) {
             fclose($handle);
             return back()->with('error', 'File CSV kosong.');
+        }
+
+        $delimiter = ',';
+        if (str_starts_with(strtolower(trim($firstLine)), 'sep=')) {
+            $parts = explode('=', trim($firstLine));
+            if (isset($parts[1]) && strlen($parts[1]) === 1) {
+                $delimiter = $parts[1];
+            }
+            $headerLine = fgets($handle);
+        } else {
+            $headerLine = $firstLine;
+        }
+
+        if (!$headerLine) {
+            fclose($handle);
+            return back()->with('error', 'File CSV kosong setelah deklarasi separator.');
+        }
+
+        // Auto-detect delimiter from header line if not set by sep=
+        if (!str_contains($firstLine, 'sep=')) {
+            $commas = substr_count($headerLine, ',');
+            $semicolons = substr_count($headerLine, ';');
+            $delimiter = $semicolons > $commas ? ';' : ',';
+        }
+
+        // Parse headers using detected delimiter
+        $headers = str_getcsv($headerLine, $delimiter);
+        if (! $headers) {
+            fclose($handle);
+            return back()->with('error', 'Header CSV tidak valid.');
         }
 
         $headers = array_map(fn ($h) => strtolower(trim((string) $h)), $headers);
@@ -166,8 +200,8 @@ class ScoreController extends Controller
         $errors = [];
         $rowNumber = 1;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($handle, $nisIndex, $criterionIndexes, $period, &$updatedCount, &$errors, &$rowNumber) {
-            while (($row = fgetcsv($handle)) !== false) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($handle, $nisIndex, $criterionIndexes, $period, $delimiter, &$updatedCount, &$errors, &$rowNumber) {
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $rowNumber++;
 
                 if (empty(array_filter($row))) {
