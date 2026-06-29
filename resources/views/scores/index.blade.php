@@ -136,11 +136,13 @@
 
     <script>
         function openImportModal() {
-            const modal = document.getElementById('import-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                document.body.classList.add('overflow-hidden');
+            var modal = document.getElementById('import-modal');
+            if (!modal) {
+                alert('ERROR: modal element not found!');
+                return;
             }
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
         }
 
         function closeImportModal() {
