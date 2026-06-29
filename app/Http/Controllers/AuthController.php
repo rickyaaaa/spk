@@ -17,14 +17,14 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'username' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()
-                ->withErrors(['email' => 'Email atau password tidak sesuai.'])
-                ->onlyInput('email');
+                ->withErrors(['username' => 'Username atau password tidak sesuai.'])
+                ->onlyInput('username');
         }
 
         $request->session()->regenerate();

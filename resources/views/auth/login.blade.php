@@ -60,8 +60,8 @@
                 <form action="{{ route('login.store') }}" method="POST" class="space-y-5">
                     @csrf
                     <label class="block">
-                        <span class="text-sm font-semibold text-zinc-700">Email</span>
-                        <input type="email" name="email" value="{{ old('email') }}" autocomplete="username" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                        <span class="text-sm font-semibold text-zinc-700">Username</span>
+                        <input type="text" name="username" value="{{ old('username') }}" autocomplete="username" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
                     </label>
                     <label class="block">
                         <span class="text-sm font-semibold text-zinc-700">Password</span>

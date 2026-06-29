@@ -29,6 +29,7 @@
                     ['label' => 'Input Nilai', 'route' => 'scores.index', 'icon' => 'clipboard-pen-line'],
                     ['label' => 'Perankingan', 'route' => 'ranking.index', 'icon' => 'trophy'],
                     ['label' => 'Laporan', 'route' => 'reports.index', 'icon' => 'file-down'],
+                    ['label' => 'Data User', 'route' => 'users.index', 'icon' => 'user-cog'],
                 ];
             @endphp
 

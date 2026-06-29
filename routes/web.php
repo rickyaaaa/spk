@@ -7,6 +7,7 @@ use App\Http\Controllers\RankingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
@@ -26,6 +27,7 @@ Route::middleware('auth')->group(function () {
 
     Route::put('/criteria/comparisons', [CriterionController::class, 'updateComparisons'])->name('criteria.comparisons.update');
     Route::resource('criteria', CriterionController::class)->except(['create', 'edit']);
+    Route::resource('users', UserController::class)->except(['create']);
 
     Route::get('/scores', [ScoreController::class, 'index'])->name('scores.index');
     Route::put('/scores', [ScoreController::class, 'update'])->name('scores.update');
