@@ -4,6 +4,15 @@
 @section('page-title', 'Pengaturan Kriteria AHP')
 
 @section('content')
+    <style>
+        /* Modal: hidden by default, shown when URL hash matches */
+        .modal-overlay { display: none; position: fixed; inset: 0; z-index: 50; overflow-y: auto; }
+        .modal-overlay:target { display: block; }
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); }
+        .modal-container { position: relative; display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-card { width: 100%; max-width: 28rem; background: white; border-radius: 0.75rem; border: 1px solid #e4e4e7; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    </style>
+
     @if (session('success'))
         <div class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{{ session('success') }}</div>
     @endif
@@ -23,16 +32,15 @@
                     <div>
                         <h2 class="text-lg font-bold">Perbandingan Kriteria</h2>
                         <p class="mt-1 text-sm text-zinc-500">Atur tingkat kepentingan antar kriteria penilaian.</p>
-                        <button
-                            type="button"
-                            onclick="openCriterionModal()"
-                            class="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                        <a
+                            href="#criterion-modal"
+                            class="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-100 no-underline"
                             aria-haspopup="dialog"
                             aria-controls="criterion-modal"
                         >
                             <i data-lucide="plus" class="h-4 w-4"></i>
                             Tambah Kriteria Baru
-                        </button>
+                        </a>
                     </div>
                     <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50" @disabled($criteria->isEmpty())>
                         <i data-lucide="calculator" class="h-4 w-4"></i>
@@ -146,18 +154,19 @@
         </section>
     </div>
 
-    <div id="criterion-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="criterion-modal-title">
-        <div class="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm" onclick="closeCriterionModal()"></div>
-        <div class="relative flex min-h-screen items-center justify-center p-4">
-            <div class="w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl">
+    {{-- Modal Tambah Kriteria - uses CSS :target, no JavaScript needed --}}
+    <div id="criterion-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="criterion-modal-title">
+        <a href="#" class="modal-backdrop" aria-label="Tutup modal"></a>
+        <div class="modal-container">
+            <div class="modal-card">
                 <div class="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
                     <div>
                         <h2 id="criterion-modal-title" class="text-lg font-bold text-zinc-950">Tambah Kriteria Baru</h2>
                         <p class="mt-1 text-sm text-zinc-500">Kriteria akan langsung ditambahkan ke matriks AHP.</p>
                     </div>
-                    <button type="button" onclick="closeCriterionModal()" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Tutup modal">
+                    <a href="#" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Tutup modal">
                         <i data-lucide="x" class="h-5 w-5"></i>
-                    </button>
+                    </a>
                 </div>
 
                 <form action="{{ route('criteria.store') }}" method="POST" class="space-y-5 p-6">
@@ -198,7 +207,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-zinc-100 pt-5">
-                        <button type="button" onclick="closeCriterionModal()" class="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">Batal</button>
+                        <a href="#" class="inline-flex h-10 items-center rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 no-underline">Batal</a>
                         <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                             <i data-lucide="save" class="h-4 w-4"></i>
                             Simpan Kriteria
@@ -209,34 +218,7 @@
         </div>
     </div>
 
-    <script>
-        function openCriterionModal() {
-            const modal = document.getElementById('criterion-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                document.body.classList.add('overflow-hidden');
-                const nameInput = document.getElementById('criterion-name');
-                if (nameInput) window.setTimeout(() => nameInput.focus(), 0);
-            }
-        }
-
-        function closeCriterionModal() {
-            const modal = document.getElementById('criterion-modal');
-            if (modal) {
-                modal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-            }
-        }
-
-        document.addEventListener('keydown', (event) => {
-            const modal = document.getElementById('criterion-modal');
-            if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
-                closeCriterionModal();
-            }
-        });
-
-        @if ($errors->has('name') || $errors->has('code'))
-            document.addEventListener('DOMContentLoaded', () => openCriterionModal());
-        @endif
-    </script>
+    @if ($errors->has('name') || $errors->has('code'))
+        <script>window.location.hash = 'criterion-modal';</script>
+    @endif
 @endsection

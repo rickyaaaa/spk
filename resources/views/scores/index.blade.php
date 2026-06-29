@@ -4,6 +4,15 @@
 @section('page-title', 'Input Nilai Siswa')
 
 @section('content')
+    <style>
+        /* Modal: hidden by default, shown when URL hash matches #import-modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; z-index: 50; overflow-y: auto; }
+        .modal-overlay:target { display: block; }
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); }
+        .modal-container { position: relative; display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-card { width: 100%; max-width: 28rem; background: white; border-radius: 0.75rem; border: 1px solid #e4e4e7; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    </style>
+
     @if (session('success'))
         <div class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{{ session('success') }}</div>
     @endif
@@ -24,10 +33,10 @@
                 <p class="mt-1 text-sm text-zinc-500">Masukkan nilai mentah 0-100. Normalisasi dilakukan otomatis oleh metode SAW saat perangkingan.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button type="button" onclick="openImportModal()" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                <a href="#import-modal" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 no-underline">
                     <i data-lucide="upload" class="h-4 w-4"></i>
                     Import
-                </button>
+                </a>
                 <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                     <i data-lucide="save" class="h-4 w-4"></i>
                     Simpan Nilai
@@ -78,25 +87,26 @@
         </div>
     </section>
 
-    <div id="import-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
-        <div class="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm" onclick="closeImportModal()"></div>
-        <div class="relative flex min-h-screen items-center justify-center p-4">
-            <div class="w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl">
+    {{-- Modal Import - uses CSS :target, no JavaScript needed --}}
+    <div id="import-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
+        <a href="#" class="modal-backdrop" aria-label="Tutup modal"></a>
+        <div class="modal-container">
+            <div class="modal-card">
                 <div class="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
                     <div>
                         <h2 id="import-modal-title" class="text-lg font-bold text-zinc-950">Import Nilai Siswa</h2>
                         <p class="mt-1 text-sm text-zinc-500">Unggah file CSV berisi data nilai siswa.</p>
                     </div>
-                    <button type="button" onclick="closeImportModal()" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Tutup modal">
+                    <a href="#" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Tutup modal">
                         <i data-lucide="x" class="h-5 w-5"></i>
-                    </button>
+                    </a>
                 </div>
 
                 <form action="{{ route('scores.import') }}" method="POST" enctype="multipart/form-data" class="space-y-5 p-6">
                     @csrf
                     <input type="hidden" name="period" value="{{ $period }}">
                     
-                    <div class="rounded-lg border border-zinc-150 bg-zinc-50 p-4 text-sm text-zinc-600">
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
                         <p class="font-bold text-zinc-900 mb-1">Panduan Format CSV:</p>
                         <ul class="list-disc pl-5 space-y-1 text-xs">
                             <li>File harus berformat <strong>.csv</strong> atau <strong>.txt</strong>.</li>
@@ -123,42 +133,14 @@
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-zinc-100 pt-5">
-                        <button type="button" onclick="closeImportModal()" class="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">Batal</button>
+                        <a href="#" class="inline-flex h-10 items-center rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 no-underline">Batal</a>
                         <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                             <i data-lucide="upload" class="h-4 w-4"></i>
-                            Upload & Impor
+                            Upload &amp; Impor
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    <script>
-        function openImportModal() {
-            var modal = document.getElementById('import-modal');
-            if (!modal) {
-                alert('ERROR: modal element not found!');
-                return;
-            }
-            modal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeImportModal() {
-            const modal = document.getElementById('import-modal');
-            if (modal) {
-                modal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-            }
-        }
-
-        document.addEventListener('keydown', (event) => {
-            const modal = document.getElementById('import-modal');
-            if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
-                closeImportModal();
-            }
-        });
-    </script>
 @endsection
-
