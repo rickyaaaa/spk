@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->except(['create']);
 
     Route::get('/scores', [ScoreController::class, 'index'])->name('scores.index');
+    Route::get('/scores/template', [ScoreController::class, 'exportTemplate'])->name('scores.template');
+    Route::post('/scores/import', [ScoreController::class, 'import'])->name('scores.import');
     Route::put('/scores', [ScoreController::class, 'update'])->name('scores.update');
 
     Route::get('/ranking', [RankingController::class, 'index'])->name('ranking.index');
