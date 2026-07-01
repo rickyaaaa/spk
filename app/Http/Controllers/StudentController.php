@@ -239,8 +239,8 @@ class StudentController extends Controller
         return $request->validate([
             'nis' => ['required', 'string', 'max:30', Rule::unique('students', 'nis')->ignore($student)],
             'name' => ['required', 'string', 'max:120'],
-            'class_name' => ['required', 'string', 'max:80'],
-            'status' => ['required', 'string', 'max:30'],
+            'class_name' => ['required', 'string', Rule::in(['Paket B - VIII', 'Paket B - IX', 'Paket C - XI', 'Paket C - XII'])],
+            'status' => ['required', 'string', Rule::in(['Aktif', 'Evaluasi'])],
         ]);
     }
 }

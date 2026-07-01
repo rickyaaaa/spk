@@ -83,7 +83,6 @@ class AhpService
 
         return DB::transaction(function () use ($period) {
             $criteria = Criterion::query()
-                ->withTrashed()
                 ->orderBy('id')
                 ->get();
             $students = Student::query()
@@ -107,7 +106,12 @@ class AhpService
                 ->map(function (Student $student) use ($criteria, $period, $maxScoresByCriterion) {
                     $scoresByCriterion = $student->scores->keyBy('criterion_id');
 
-                    if ($scoresByCriterion->count() < $criteria->count()) {
+                    // Filter student scores to only active criteria
+                    $activeScoresCount = $student->scores
+                        ->filter(fn ($score) => $criteria->contains('id', $score->criterion_id))
+                        ->count();
+
+                    if ($activeScoresCount < $criteria->count()) {
                         return null;
                     }
 
