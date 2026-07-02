@@ -26,7 +26,6 @@
     <form action="{{ route('scores.update') }}" method="POST" class="min-w-0 rounded-lg border border-zinc-200 bg-white shadow-sm">
         @csrf
         @method('PUT')
-        <input type="hidden" name="period" value="{{ $period }}">
         <div class="flex flex-col gap-3 border-b border-zinc-200 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div>
@@ -35,11 +34,12 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Periode:</span>
-                    <select onchange="window.location.search = '?period=' + this.value" class="h-9 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
-                        @foreach ($periods as $p)
-                            <option value="{{ $p }}" @selected($period === $p)>{{ $p }}</option>
-                        @endforeach
-                    </select>
+                    <div class="flex items-center gap-1.5">
+                        <input id="period-input" type="text" name="period" value="{{ $period }}" required class="h-9 w-36 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                        <button type="button" onclick="window.location.search = '?period=' + encodeURIComponent(document.getElementById('period-input').value)" class="inline-flex h-9 items-center rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50" title="Buka data nilai untuk periode ini">
+                            Buka
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2">
