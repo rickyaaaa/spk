@@ -39,6 +39,7 @@
             </div>
             <form action="{{ route('ranking.calculate') }}" method="POST">
                 @csrf
+                <input type="hidden" name="period" value="{{ $period }}">
                 <button type="submit" @disabled(! $isConsistent) class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white {{ $isConsistent ? 'bg-emerald-700 hover:bg-emerald-800' : 'cursor-not-allowed bg-zinc-400' }}">
                     <i data-lucide="calculator" class="h-4 w-4"></i>
                     Hitung Perankingan
@@ -48,11 +49,21 @@
 
         <section class="min-w-0 rounded-lg border border-zinc-200 bg-white shadow-sm">
             <div class="flex flex-col gap-3 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h2 class="text-lg font-bold">Daftar Ranking</h2>
-                    <p class="mt-1 text-sm text-zinc-500">Urutan rekomendasi siswa berprestasi.</p>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold">Daftar Ranking</h2>
+                        <p class="mt-1 text-sm text-zinc-500">Urutan rekomendasi siswa berprestasi.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Periode:</span>
+                        <select onchange="window.location.search = '?period=' + this.value" class="h-9 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                            @foreach ($periods as $p)
+                                <option value="{{ $p }}" @selected($period === $p)>{{ $p }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                <a href="{{ route('reports.index') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                <a href="{{ route('reports.index', ['period' => $period]) }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
                     <i data-lucide="file-down" class="h-4 w-4"></i>
                     Cetak
                 </a>

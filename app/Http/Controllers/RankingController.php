@@ -13,29 +13,33 @@ class RankingController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
-        $period = AhpService::DEFAULT_PERIOD;
+        $period = $request->query('period', AhpService::DEFAULT_PERIOD);
+        $periods = AhpService::getAvailablePeriods();
         $consistency = $this->ahpService->currentConsistency();
 
         return view('ranking.index', [
             'students' => $this->ahpService->rankingRows($period),
             'criteria' => Criterion::query()->withTrashed()->orderBy('id')->get(),
             'period' => $period,
+            'periods' => $periods,
             'consistency' => $consistency,
         ]);
     }
 
-    public function calculate(): RedirectResponse
+    public function calculate(\Illuminate\Http\Request $request): RedirectResponse
     {
+        $period = $request->input('period', AhpService::DEFAULT_PERIOD);
+
         if (! $this->ahpService->isMatrixConsistent()) {
             return redirect()
-                ->route('ranking.index')
+                ->route('ranking.index', ['period' => $period])
                 ->with('error', 'Matriks Perbandingan Kriteria AHP Tidak Konsisten! Perangkingan SAW tidak dapat dijalankan.');
         }
 
-        $this->ahpService->calculateFinalRanking(AhpService::DEFAULT_PERIOD);
+        $this->ahpService->calculateFinalRanking($period);
 
-        return redirect()->route('ranking.index')->with('success', 'Perankingan SAW berhasil dihitung ulang.');
+        return redirect()->route('ranking.index', ['period' => $period])->with('success', 'Perankingan SAW berhasil dihitung ulang.');
     }
 }

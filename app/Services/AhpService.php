@@ -15,6 +15,16 @@ class AhpService
 {
     public const DEFAULT_PERIOD = 'Genap 2026';
     public const MAX_CONSISTENCY_RATIO = 0.1;
+
+    public static function getAvailablePeriods(): array
+    {
+        return [
+            'Ganjil 2025',
+            'Genap 2025',
+            'Ganjil 2026',
+            'Genap 2026',
+        ];
+    }
     public const INDEX_RANDOM = [
         1 => 0.0,
         2 => 0.0,

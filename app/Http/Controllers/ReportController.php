@@ -13,20 +13,22 @@ class ReportController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
-        $period = AhpService::DEFAULT_PERIOD;
+        $period = $request->query('period', AhpService::DEFAULT_PERIOD);
+        $periods = AhpService::getAvailablePeriods();
 
         return view('reports.index', [
             'students' => $this->ahpService->rankingRows($period, includeDeletedCriteria: true),
             'criteria' => Criterion::query()->withTrashed()->orderBy('id')->get(),
             'period' => $period,
+            'periods' => $periods,
         ]);
     }
 
-    public function export(): Response
+    public function export(\Illuminate\Http\Request $request): Response
     {
-        $period = AhpService::DEFAULT_PERIOD;
+        $period = $request->query('period', AhpService::DEFAULT_PERIOD);
         $rows = $this->ahpService->rankingRows($period, includeDeletedCriteria: true);
         $criteria = Criterion::query()->withTrashed()->orderBy('id')->get();
 

@@ -18,14 +18,16 @@ class ScoreController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $period = AhpService::DEFAULT_PERIOD;
+        $period = $request->query('period', AhpService::DEFAULT_PERIOD);
+        $periods = AhpService::getAvailablePeriods();
 
         return view('scores.index', [
             'students' => $this->ahpService->studentScoreRows($period),
             'criteria' => Criterion::query()->orderBy('id')->get(),
             'period' => $period,
+            'periods' => $periods,
         ]);
     }
 
