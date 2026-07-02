@@ -161,14 +161,14 @@ class AhpService
         });
     }
 
-    public function rankingRows(string $period = self::DEFAULT_PERIOD, bool $includeDeletedCriteria = true): array
+    public function rankingRows(string $period = self::DEFAULT_PERIOD, bool $includeDeletedCriteria = false): array
     {
         $criteria = Criterion::query()
             ->when($includeDeletedCriteria, fn ($query) => $query->withTrashed())
             ->orderBy('id')
             ->get();
         $results = AhpResult::query()
-            ->with(['student.scores' => fn ($query) => $query->where('evaluation_period', $period)])
+            ->with(['student.scores' => fn ($query) => $query->where('evaluation_period', $period)->whereIn('criterion_id', Criterion::pluck('id'))])
             ->where('evaluation_period', $period)
             ->orderBy('rank_position')
             ->get();

@@ -21,7 +21,7 @@ class RankingController extends Controller
 
         return view('ranking.index', [
             'students' => $this->ahpService->rankingRows($period),
-            'criteria' => Criterion::query()->withTrashed()->orderBy('id')->get(),
+            'criteria' => Criterion::query()->orderBy('id')->get(),
             'period' => $period,
             'periods' => $periods,
             'consistency' => $consistency,

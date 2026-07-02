@@ -19,8 +19,8 @@ class ReportController extends Controller
         $periods = AhpService::getAvailablePeriods();
 
         return view('reports.index', [
-            'students' => $this->ahpService->rankingRows($period, includeDeletedCriteria: true),
-            'criteria' => Criterion::query()->withTrashed()->orderBy('id')->get(),
+            'students' => $this->ahpService->rankingRows($period, includeDeletedCriteria: false),
+            'criteria' => Criterion::query()->orderBy('id')->get(),
             'period' => $period,
             'periods' => $periods,
         ]);
@@ -29,8 +29,8 @@ class ReportController extends Controller
     public function export(\Illuminate\Http\Request $request): Response
     {
         $period = $request->query('period', AhpService::DEFAULT_PERIOD);
-        $rows = $this->ahpService->rankingRows($period, includeDeletedCriteria: true);
-        $criteria = Criterion::query()->withTrashed()->orderBy('id')->get();
+        $rows = $this->ahpService->rankingRows($period, includeDeletedCriteria: false);
+        $criteria = Criterion::query()->orderBy('id')->get();
 
         $handle = fopen('php://temp', 'r+');
         fputcsv($handle, ['Peringkat', 'NIS', 'Nama', 'Kelas', ...$criteria->pluck('name')->all(), 'Skor Akhir', 'Periode']);
