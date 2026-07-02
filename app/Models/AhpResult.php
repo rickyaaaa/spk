@@ -24,6 +24,6 @@ class AhpResult extends Model
 
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class)->withTrashed();
+        return $this->belongsTo(Student::class);
     }
 }

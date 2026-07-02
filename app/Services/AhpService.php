@@ -82,11 +82,13 @@ class AhpService
         }
 
         return DB::transaction(function () use ($period) {
+            // Delete old results for this period to clear out soft-deleted student rankings
+            AhpResult::query()->where('evaluation_period', $period)->delete();
+
             $criteria = Criterion::query()
                 ->orderBy('id')
                 ->get();
             $students = Student::query()
-                ->withTrashed()
                 ->with(['scores' => fn ($query) => $query->where('evaluation_period', $period)])
                 ->orderBy('name')
                 ->get();
