@@ -18,12 +18,20 @@ class AhpService
 
     public static function getAvailablePeriods(): array
     {
-        return [
+        $defaults = [
             'Ganjil 2025',
             'Genap 2025',
             'Ganjil 2026',
             'Genap 2026',
         ];
+
+        try {
+            $dbPeriods = \App\Models\Period::pluck('name')->all();
+        } catch (\Exception $e) {
+            $dbPeriods = [];
+        }
+
+        return array_values(array_unique(array_merge($defaults, $dbPeriods)));
     }
     public const INDEX_RANDOM = [
         1 => 0.0,

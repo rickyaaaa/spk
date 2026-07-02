@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/scores/template', [ScoreController::class, 'exportTemplate'])->name('scores.template');
     Route::post('/scores/import', [ScoreController::class, 'import'])->name('scores.import');
     Route::put('/scores', [ScoreController::class, 'update'])->name('scores.update');
+    Route::post('/periods', [ScoreController::class, 'storePeriod'])->name('periods.store');
 
     Route::get('/ranking', [RankingController::class, 'index'])->name('ranking.index');
     Route::post('/ranking/calculate', [RankingController::class, 'calculate'])->name('ranking.calculate');

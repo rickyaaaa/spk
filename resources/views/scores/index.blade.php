@@ -26,6 +26,7 @@
     <form action="{{ route('scores.update') }}" method="POST" class="min-w-0 rounded-lg border border-zinc-200 bg-white shadow-sm">
         @csrf
         @method('PUT')
+        <input type="hidden" name="period" value="{{ $period }}">
         <div class="flex flex-col gap-3 border-b border-zinc-200 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div>
@@ -34,11 +35,15 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Periode:</span>
-                    <div class="flex items-center gap-1.5">
-                        <input id="period-input" type="text" name="period" value="{{ $period }}" required class="h-9 w-36 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
-                        <button type="button" onclick="window.location.search = '?period=' + encodeURIComponent(document.getElementById('period-input').value)" class="inline-flex h-9 items-center rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50" title="Buka data nilai untuk periode ini">
-                            Buka
-                        </button>
+                    <div class="flex items-center gap-1">
+                        <select onchange="window.location.search = '?period=' + this.value" class="h-9 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                            @foreach ($periods as $p)
+                                <option value="{{ $p }}" @selected($period === $p)>{{ $p }}</option>
+                            @endforeach
+                        </select>
+                        <a href="#add-period-modal" class="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900" title="Tambah Periode Ajaran Baru">
+                            <i data-lucide="plus" class="h-4 w-4"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -147,6 +152,48 @@
                         <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                             <i data-lucide="upload" class="h-4 w-4"></i>
                             Upload &amp; Impor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Tambah Periode --}}
+    <div id="add-period-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="add-period-modal-title">
+        <a href="#" class="modal-backdrop" aria-label="Tutup modal"></a>
+        <div class="modal-container">
+            <div class="modal-card">
+                <div class="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
+                    <div>
+                        <h2 id="add-period-modal-title" class="text-lg font-bold text-zinc-950">Tambah Periode Baru</h2>
+                        <p class="mt-1 text-sm text-zinc-500">Definisikan nama periode ajaran baru.</p>
+                    </div>
+                    <a href="#" class="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Tutup modal">
+                        <i data-lucide="x" class="h-5 w-5"></i>
+                    </a>
+                </div>
+
+                <form action="{{ route('periods.store') }}" method="POST" class="space-y-5 p-6">
+                    @csrf
+                    <div>
+                        <label for="period-name" class="mb-2 block text-sm font-semibold text-zinc-700">Nama Periode</label>
+                        <input
+                            id="period-name"
+                            name="name"
+                            type="text"
+                            maxlength="80"
+                            required
+                            placeholder="Contoh: Genap 2027"
+                            class="h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
+                        >
+                    </div>
+
+                    <div class="flex justify-end gap-3 border-t border-zinc-100 pt-5">
+                        <a href="#" class="inline-flex h-10 items-center rounded-lg border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 no-underline">Batal</a>
+                        <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
+                            <i data-lucide="save" class="h-4 w-4"></i>
+                            Simpan Periode
                         </button>
                     </div>
                 </form>

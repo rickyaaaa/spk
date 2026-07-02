@@ -283,4 +283,19 @@ class ScoreController extends Controller
 
         return redirect()->route('scores.index')->with('success', 'Data nilai berhasil diimpor dan ranking telah diperbarui.');
     }
+
+    public function storePeriod(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:80', 'unique:periods,name'],
+        ]);
+
+        \App\Models\Period::create([
+            'name' => trim($validated['name']),
+        ]);
+
+        return redirect()
+            ->route('scores.index', ['period' => trim($validated['name'])])
+            ->with('success', 'Periode ajaran baru berhasil ditambahkan.');
+    }
 }
