@@ -60,9 +60,6 @@
                         <h1 class="mt-1 text-2xl font-bold text-zinc-950">@yield('page-title')</h1>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="button" class="grid h-10 w-10 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50" title="Notifikasi">
-                            <i data-lucide="bell" class="h-4 w-4"></i>
-                        </button>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white hover:bg-zinc-800">
