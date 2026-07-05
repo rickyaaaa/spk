@@ -70,4 +70,52 @@ class CriterionCrudTest extends TestCase
         $this->assertDatabaseMissing('ahp_comparisons', ['criterion_a_id' => $criterion->id]);
         $this->assertDatabaseMissing('ahp_comparisons', ['criterion_b_id' => $criterion->id]);
     }
+
+    public function test_storing_a_criterion_can_reuse_code_from_soft_deleted_criterion(): void
+    {
+        $user = User::factory()->create();
+        $trashedCriterion = Criterion::query()->create(['code' => 'C4', 'name' => 'Kriteria Lama']);
+        $trashedCriterion->delete();
+
+        $response = $this->actingAs($user)->post(route('criteria.store'), [
+            'name' => 'Kriteria Baru',
+            'code' => 'C4',
+        ]);
+
+        $response
+            ->assertRedirect(route('criteria.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('criteria', [
+            'code' => 'C4',
+            'name' => 'Kriteria Baru',
+            'deleted_at' => null,
+        ]);
+        $this->assertStringContainsString('__deleted_'.$trashedCriterion->id, Criterion::withTrashed()->find($trashedCriterion->id)->code);
+    }
+
+    public function test_updating_a_criterion_can_reuse_code_from_soft_deleted_criterion(): void
+    {
+        $user = User::factory()->create();
+        $trashedCriterion = Criterion::query()->create(['code' => 'C4', 'name' => 'Kriteria Lama']);
+        $activeCriterion = Criterion::query()->create(['code' => 'C5', 'name' => 'Kriteria Aktif']);
+        $trashedCriterion->delete();
+
+        $response = $this->actingAs($user)->put(route('criteria.update', $activeCriterion), [
+            'name' => 'Kriteria Aktif Baru',
+            'code' => 'C4',
+        ]);
+
+        $response
+            ->assertRedirect(route('criteria.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('criteria', [
+            'id' => $activeCriterion->id,
+            'code' => 'C4',
+            'name' => 'Kriteria Aktif Baru',
+            'deleted_at' => null,
+        ]);
+        $this->assertStringContainsString('__deleted_'.$trashedCriterion->id, Criterion::withTrashed()->find($trashedCriterion->id)->code);
+    }
 }

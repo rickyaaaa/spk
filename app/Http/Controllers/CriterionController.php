@@ -33,10 +33,12 @@ class CriterionController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:50', 'regex:/^[A-Z0-9_-]+$/', Rule::unique('criteria', 'code')],
+            'code' => ['required', 'string', 'max:50', 'regex:/^[A-Z0-9_-]+$/', Rule::unique('criteria', 'code')->whereNull('deleted_at')],
         ]);
 
         DB::transaction(function () use ($validated) {
+            $this->releaseSoftDeletedCode($validated['code']);
+
             $existingCriteria = Criterion::query()->lockForUpdate()->get();
             $criterion = Criterion::query()->create($validated);
 
@@ -85,11 +87,15 @@ class CriterionController extends Controller
                 'string',
                 'max:50',
                 'regex:/^[A-Z0-9_-]+$/',
-                Rule::unique('criteria', 'code')->ignore($criterion),
+                Rule::unique('criteria', 'code')->whereNull('deleted_at')->ignore($criterion),
             ],
         ]);
 
-        $criterion->update($validated);
+        DB::transaction(function () use ($criterion, $validated) {
+            $this->releaseSoftDeletedCode($validated['code']);
+
+            $criterion->update($validated);
+        });
 
         return redirect()
             ->route('criteria.index')
@@ -130,5 +136,21 @@ class CriterionController extends Controller
         return redirect()
             ->route('criteria.index')
             ->with('success', 'Kriteria berhasil dihapus.');
+    }
+
+    private function releaseSoftDeletedCode(string $code): void
+    {
+        Criterion::query()
+            ->onlyTrashed()
+            ->where('code', $code)
+            ->get()
+            ->each(function (Criterion $criterion) use ($code) {
+                $suffix = '__deleted_'.$criterion->id;
+                $baseLength = max(1, 50 - strlen($suffix));
+
+                $criterion->forceFill([
+                    'code' => substr($code, 0, $baseLength).$suffix,
+                ])->save();
+            });
     }
 }
