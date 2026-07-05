@@ -12,7 +12,7 @@
             <form action="#" class="mt-6 space-y-4">
                 <label class="block">
                     <span class="text-sm font-semibold text-zinc-700">Periode Evaluasi</span>
-                    <select onchange="window.location.search = '?period=' + this.value" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                    <select onchange="window.location.search = '?period=' + this.value + '&format={{ $format }}'" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
                         @foreach ($periods as $p)
                             <option value="{{ $p }}" @selected($period === $p)>{{ $p }}</option>
                         @endforeach
@@ -21,21 +21,21 @@
                 <label class="block">
                     <span class="text-sm font-semibold text-zinc-700">Format</span>
                     <div class="mt-2 grid grid-cols-2 gap-2">
-                        <button type="button" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white">
+                        <a href="?period={{ $period }}&format=pdf" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-semibold no-underline {{ $format === 'pdf' ? 'bg-zinc-950 text-white' : 'border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50' }}">
                             <i data-lucide="file-text" class="h-4 w-4"></i>
                             PDF
-                        </button>
-                        <button type="button" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                        </a>
+                        <a href="?period={{ $period }}&format=excel" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-semibold no-underline {{ $format === 'excel' ? 'bg-zinc-950 text-white' : 'border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50' }}">
                             <i data-lucide="table" class="h-4 w-4"></i>
                             Excel
-                        </button>
+                        </a>
                     </div>
                 </label>
                 <label class="flex items-start gap-3 rounded-lg border border-zinc-200 p-4 text-sm text-zinc-600">
                     <input type="checkbox" checked class="mt-1 h-4 w-4 rounded border-zinc-300 text-emerald-700">
                     Sertakan rincian bobot AHP dan nilai tiap kriteria.
                 </label>
-                <a href="{{ route('reports.export', ['period' => $period]) }}" class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
+                <a href="{{ route('reports.export', ['period' => $period, 'format' => $format]) }}" class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                     <i data-lucide="download" class="h-4 w-4"></i>
                     Unduh Laporan
                 </a>
