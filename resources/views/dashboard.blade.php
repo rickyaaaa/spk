@@ -56,7 +56,7 @@
                                 @foreach ($criteria as $criterion)
                                     <td class="px-5 py-4">{{ $student[$criterion->code] ?? 0 }}</td>
                                 @endforeach
-                                <td class="px-5 py-4 text-right font-bold text-emerald-700">{{ number_format($student['score'], 2) }}</td>
+                                <td class="px-5 py-4 text-right font-bold text-emerald-700">{{ number_format($student['score'], 4) }}</td>
                             </tr>
                         @endforeach
                     </tbody>

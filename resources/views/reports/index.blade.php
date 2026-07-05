@@ -76,7 +76,7 @@
                                     <td class="px-4 py-4 font-bold">{{ $student['rank'] }}</td>
                                     <td class="px-4 py-4">{{ $student['name'] }}</td>
                                     <td class="px-4 py-4">{{ $student['class_name'] }}</td>
-                                    <td class="px-4 py-4 text-right font-bold text-emerald-700">{{ number_format($student['score'], 2) }}</td>
+                                    <td class="px-4 py-4 text-right font-bold text-emerald-700">{{ number_format($student['score'], 4) }}</td>
                                     <td class="px-4 py-4">
                                         <span class="{{ $student['rank'] <= 3 ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-100 text-zinc-600' }} rounded-full px-2.5 py-1 text-xs font-semibold">{{ $student['rank'] <= 3 ? 'Direkomendasikan' : 'Cadangan' }}</span>
                                     </td>

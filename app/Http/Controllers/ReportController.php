@@ -119,7 +119,7 @@ class ReportController extends Controller
             ->map(function (array $row) use ($finalScores) {
                 $score = (float) ($finalScores[$row['id']] ?? $row['score'] ?? 0);
                 $row['score'] = $score;
-                $row['score_for_export'] = number_format($score, 2, '.', '');
+                $row['score_for_export'] = number_format($score, 4, '.', '');
 
                 return $row;
             })

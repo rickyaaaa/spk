@@ -60,7 +60,7 @@
                     <label class="block">
                         <span class="text-sm font-semibold text-zinc-700">Status</span>
                         <select name="status" class="mt-2 h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
-                            @foreach (['Aktif', 'Evaluasi'] as $status)
+                            @foreach (['Aktif'] as $status)
                                 <option @selected(old('status', $editingStudent?->status ?? 'Aktif') === $status)>{{ $status }}</option>
                             @endforeach
                         </select>

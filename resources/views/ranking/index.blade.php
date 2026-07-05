@@ -34,7 +34,7 @@
             </div>
             <div class="mt-6 rounded-lg bg-zinc-950 p-5 text-white">
                 <p class="text-sm text-zinc-300">Skor preferensi AHP-SAW</p>
-                <p class="mt-2 text-5xl font-bold">{{ number_format($topStudent['score'] ?? 0, 2) }}</p>
+                <p class="mt-2 text-5xl font-bold">{{ number_format($topStudent['score'] ?? 0, 4) }}</p>
                 <p class="mt-3 text-sm leading-6 text-zinc-300">Siswa ini memiliki nilai preferensi tertinggi dari normalisasi SAW dan bobot kriteria AHP.</p>
             </div>
             <form action="{{ route('ranking.calculate') }}" method="POST">
@@ -93,7 +93,7 @@
                                 @foreach ($criteria as $criterion)
                                     <td class="px-5 py-4">{{ $student[$criterion->code] ?? 0 }}</td>
                                 @endforeach
-                                <td class="px-5 py-4 text-right font-bold text-emerald-700">{{ number_format($student['score'], 2) }}</td>
+                                <td class="px-5 py-4 text-right font-bold text-emerald-700">{{ number_format($student['score'], 4) }}</td>
                             </tr>
                         @empty
                             <tr>

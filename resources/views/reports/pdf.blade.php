@@ -178,7 +178,7 @@
                         <td class="text-center">{{ number_format($student[$criterion->code.'_raw'] ?? 0, 0) }}</td>
                     @endforeach
                     <td class="text-right" style="font-weight: bold; color: #047857;">
-                        {{ number_format($student['score'], 2) }}
+                        {{ number_format($student['score'], 4) }}
                     </td>
                     <td class="text-center">
                         @if ($student['rank'] <= 3)

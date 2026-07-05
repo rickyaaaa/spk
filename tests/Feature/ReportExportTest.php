@@ -91,7 +91,7 @@ class ReportExportTest extends TestCase
             ->where('evaluation_period', 'Genap 2026')
             ->get()
             ->mapWithKeys(fn (AhpResult $result) => [
-                $result->student->nis => number_format((float) $result->final_score, 2, '.', ''),
+                $result->student->nis => number_format((float) $result->final_score, 4, '.', ''),
             ]);
 
         foreach (array_slice($lines, 2) as $line) {
