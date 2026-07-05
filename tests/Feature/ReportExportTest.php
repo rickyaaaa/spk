@@ -22,6 +22,7 @@ class ReportExportTest extends TestCase
             ->get(route('reports.export', [
                 'period' => 'Genap 2026',
                 'format' => 'pdf',
+                'include_details' => 1,
             ]));
 
         $response
@@ -29,6 +30,33 @@ class ReportExportTest extends TestCase
             ->assertHeader('content-type', 'application/pdf');
 
         $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    public function test_pdf_view_renders_normalization_details_when_requested(): void
+    {
+        $html = view('reports.pdf', [
+            'students' => [],
+            'criteria' => collect(),
+            'period' => 'Genap 2026',
+            'includeDetails' => true,
+            'normalizationRows' => [
+                [
+                    'nis' => '12345',
+                    'student' => 'Budi',
+                    'criterion' => 'Rapor',
+                    'criterion_code' => 'C1',
+                    'raw_score' => 90,
+                    'normalized_score' => 0.98,
+                    'weight' => 0.5,
+                    'weighted_score' => 0.49,
+                ],
+            ],
+        ])->render();
+
+        $this->assertStringContainsString('Rincian Normalisasi dan Bobot Kriteria', $html);
+        $this->assertStringContainsString('Budi', $html);
+        $this->assertStringContainsString('0.9800', $html);
+        $this->assertStringContainsString('0.5000', $html);
     }
 
     public function test_excel_export_uses_final_saw_preference_score(): void

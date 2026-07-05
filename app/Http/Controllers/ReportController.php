@@ -16,6 +16,7 @@ class ReportController extends Controller
     {
         $period = $request->query('period', AhpService::DEFAULT_PERIOD);
         $format = $request->query('format', 'pdf');
+        $includeDetails = $request->boolean('include_details', true);
         $periods = AhpService::getAvailablePeriods();
 
         return view('reports.index', [
@@ -24,6 +25,7 @@ class ReportController extends Controller
             'period' => $period,
             'periods' => $periods,
             'format' => $format,
+            'includeDetails' => $includeDetails,
         ]);
     }
 
@@ -31,17 +33,18 @@ class ReportController extends Controller
     {
         $period = $request->query('period', AhpService::DEFAULT_PERIOD);
         $format = $request->query('format', 'pdf');
+        $includeDetails = $request->boolean('include_details');
         $rows = $this->reportRows($period);
         $criteria = Criterion::query()->orderBy('id')->get();
 
         if ($format === 'pdf') {
-            return $this->exportPdf($rows, $criteria, $period);
+            return $this->exportPdf($rows, $criteria, $period, $includeDetails);
         }
 
         return $this->exportExcel($rows, $criteria, $period);
     }
 
-    private function exportPdf(array $rows, $criteria, string $period)
+    private function exportPdf(array $rows, $criteria, string $period, bool $includeDetails)
     {
         if (! app()->bound('dompdf.wrapper')) {
             return response('PDF engine belum terpasang. Jalankan composer install --no-dev --optimize-autoloader di server production.', 500);
@@ -51,6 +54,8 @@ class ReportController extends Controller
             'students' => $rows,
             'criteria' => $criteria,
             'period' => $period,
+            'includeDetails' => $includeDetails,
+            'normalizationRows' => $includeDetails ? $this->normalizationRows($rows, $criteria) : [],
         ])->render();
 
         $pdf = app('dompdf.wrapper');
@@ -124,5 +129,37 @@ class ReportController extends Controller
     private function reportFilename(string $period, string $extension): string
     {
         return 'laporan-spk-siswa-berprestasi-'.str_replace(' ', '_', strtolower($period)).'.'.$extension;
+    }
+
+    private function normalizationRows(array $rows, $criteria): array
+    {
+        $maxScores = $criteria->mapWithKeys(function (Criterion $criterion) use ($rows) {
+            $maxScore = collect($rows)
+                ->map(fn (array $row) => (float) ($row[$criterion->code.'_raw'] ?? $row[$criterion->code] ?? 0))
+                ->max();
+
+            return [$criterion->id => max((float) $maxScore, 0.0001)];
+        });
+
+        return collect($rows)
+            ->flatMap(function (array $row) use ($criteria, $maxScores) {
+                return $criteria->map(function (Criterion $criterion) use ($row, $maxScores) {
+                    $rawScore = (float) ($row[$criterion->code.'_raw'] ?? $row[$criterion->code] ?? 0);
+                    $normalizedScore = $rawScore / (float) $maxScores[$criterion->id];
+                    $weight = (float) $criterion->weight;
+
+                    return [
+                        'student' => $row['name'],
+                        'nis' => $row['nis'],
+                        'criterion' => $criterion->name,
+                        'criterion_code' => $criterion->code,
+                        'raw_score' => $rawScore,
+                        'normalized_score' => $normalizedScore,
+                        'weight' => $weight,
+                        'weighted_score' => $normalizedScore * $weight,
+                    ];
+                });
+            })
+            ->all();
     }
 }

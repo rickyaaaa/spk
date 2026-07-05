@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\AhpComparison;
 use App\Models\Criterion;
 use App\Models\Student;
-use App\Models\StudentScore;
 use App\Models\User;
 use App\Services\AhpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +18,7 @@ class ScoreImportTest extends TestCase
     public function test_can_download_score_template(): void
     {
         $admin = User::factory()->create();
-        
+
         // Seed some students and criteria
         $student = Student::query()->create(['nis' => '12345', 'name' => 'Budi', 'class_name' => 'Paket C - XII']);
         $criterion = Criterion::query()->create(['code' => 'rapor', 'name' => 'Rapor', 'weight' => 0.5]);
@@ -26,16 +26,16 @@ class ScoreImportTest extends TestCase
         $response = $this->actingAs($admin)->get(route('scores.template'));
 
         $response->assertStatus(200);
-        
+
         $content = $response->streamedContent();
         $lines = explode("\n", trim($content));
-        
+
         // Verify separator declaration is present
         $this->assertEquals('sep=,', trim($lines[0]));
         // Verify header
-        $this->assertEquals('nis,nama,rapor', trim($lines[1]));
+        $this->assertEquals('nis,nama,periode,rapor', trim($lines[1]));
         // Verify data
-        $this->assertEquals('12345,Budi,', trim($lines[2]));
+        $this->assertEquals(['12345', 'Budi', AhpService::DEFAULT_PERIOD, ''], str_getcsv(trim($lines[2])));
     }
 
     public function test_can_import_scores_successfully(): void
@@ -45,13 +45,13 @@ class ScoreImportTest extends TestCase
         $criterion = Criterion::query()->create(['code' => 'rapor', 'name' => 'Rapor', 'weight' => 1.0]);
 
         // Pre-populate comparison matrix so calculation works (is consistent)
-        \App\Models\AhpComparison::query()->create([
+        AhpComparison::query()->create([
             'criterion_a_id' => $criterion->id,
             'criterion_b_id' => $criterion->id,
             'value' => 1.0,
         ]);
 
-        $csvContent = "sep=,\nnis,nama,rapor\n12345,Budi,85.5\n";
+        $csvContent = "sep=,\nnis,nama,periode,rapor\n12345,Budi,".AhpService::DEFAULT_PERIOD.",85.5\n";
         $file = UploadedFile::fake()->createWithContent('scores.csv', $csvContent);
 
         $response = $this->actingAs($admin)->post(route('scores.import'), [
@@ -77,13 +77,13 @@ class ScoreImportTest extends TestCase
         $criterion = Criterion::query()->create(['code' => 'rapor', 'name' => 'Rapor', 'weight' => 1.0]);
 
         // Pre-populate comparison matrix so calculation works (is consistent)
-        \App\Models\AhpComparison::query()->create([
+        AhpComparison::query()->create([
             'criterion_a_id' => $criterion->id,
             'criterion_b_id' => $criterion->id,
             'value' => 1.0,
         ]);
 
-        $csvContent = "nis;nama;rapor\n12345;Budi;90\n";
+        $csvContent = "nis;nama;periode;rapor\n12345;Budi;".AhpService::DEFAULT_PERIOD.";90\n";
         $file = UploadedFile::fake()->createWithContent('scores_semicolon.csv', $csvContent);
 
         $response = $this->actingAs($admin)->post(route('scores.import'), [
@@ -108,7 +108,7 @@ class ScoreImportTest extends TestCase
         $student = Student::query()->create(['nis' => '12345', 'name' => 'Budi', 'class_name' => 'Paket C - XII']);
         $criterion = Criterion::query()->create(['code' => 'rapor', 'name' => 'Rapor', 'weight' => 1.0]);
 
-        $csvContent = "nis,nama,rapor\n12345,Budi,150\n99999,Salah,80\n";
+        $csvContent = "nis,nama,periode,rapor\n12345,Budi,".AhpService::DEFAULT_PERIOD.",150\n99999,Salah,".AhpService::DEFAULT_PERIOD.",80\n";
         $file = UploadedFile::fake()->createWithContent('scores_errors.csv', $csvContent);
 
         $response = $this->actingAs($admin)->post(route('scores.import'), [
@@ -118,9 +118,57 @@ class ScoreImportTest extends TestCase
 
         $response->assertRedirect(route('scores.index'));
         $response->assertSessionHas('error');
-        
+
         $error = session('error');
         $this->assertStringContainsString('Nilai \'150\' tidak valid', $error);
         $this->assertStringContainsString('Siswa dengan NIS \'99999\' tidak ditemukan', $error);
+    }
+
+    public function test_import_strips_bom_and_uses_selected_period_when_csv_period_is_empty(): void
+    {
+        $admin = User::factory()->create();
+        $student = Student::query()->create(['nis' => '12345', 'name' => 'Budi', 'class_name' => 'Paket C - XII']);
+        $criterion = Criterion::query()->create(['code' => 'rapor', 'name' => 'Rapor', 'weight' => 1.0]);
+
+        AhpComparison::query()->create([
+            'criterion_a_id' => $criterion->id,
+            'criterion_b_id' => $criterion->id,
+            'value' => 1.0,
+        ]);
+
+        $csvContent = "\xEF\xBB\xBFnis,nama,periode,rapor\n12345,Budi,,88\n";
+        $file = UploadedFile::fake()->createWithContent('scores_bom.csv', $csvContent);
+
+        $response = $this->actingAs($admin)->post(route('scores.import'), [
+            'file' => $file,
+            'period' => AhpService::DEFAULT_PERIOD,
+        ]);
+
+        $response->assertRedirect(route('scores.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('student_scores', [
+            'student_id' => $student->id,
+            'criterion_id' => $criterion->id,
+            'raw_score' => 88,
+            'evaluation_period' => AhpService::DEFAULT_PERIOD,
+        ]);
+    }
+
+    public function test_import_returns_specific_error_when_period_column_is_missing(): void
+    {
+        $admin = User::factory()->create();
+        Criterion::query()->create(['code' => 'rapor', 'name' => 'Rapor', 'weight' => 1.0]);
+
+        $csvContent = "nis,nama,rapor\n12345,Budi,88\n";
+        $file = UploadedFile::fake()->createWithContent('scores_missing_period.csv', $csvContent);
+
+        $response = $this->actingAs($admin)->post(route('scores.import'), [
+            'file' => $file,
+            'period' => AhpService::DEFAULT_PERIOD,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'Kolom periode tidak ditemukan.');
     }
 }

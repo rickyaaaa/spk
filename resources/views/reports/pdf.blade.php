@@ -101,6 +101,9 @@
         .signature-space {
             height: 60px;
         }
+        .page-break {
+            page-break-before: always;
+        }
     </style>
 </head>
 <body>
@@ -188,6 +191,38 @@
             @endforeach
         </tbody>
     </table>
+
+    @if ($includeDetails ?? false)
+        <div class="title-section page-break">
+            Rincian Normalisasi dan Bobot Kriteria
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>NIS</th>
+                    <th>Nama Siswa</th>
+                    <th>Kriteria</th>
+                    <th class="text-right">Nilai Mentah</th>
+                    <th class="text-right">Nilai Normalisasi</th>
+                    <th class="text-right">Bobot AHP</th>
+                    <th class="text-right">Nilai Terbobot</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($normalizationRows ?? [] as $detail)
+                    <tr>
+                        <td>{{ $detail['nis'] }}</td>
+                        <td>{{ $detail['student'] }}</td>
+                        <td>{{ $detail['criterion'] }} ({{ $detail['criterion_code'] }})</td>
+                        <td class="text-right">{{ number_format($detail['raw_score'], 2) }}</td>
+                        <td class="text-right">{{ number_format($detail['normalized_score'], 4) }}</td>
+                        <td class="text-right">{{ number_format($detail['weight'], 4) }}</td>
+                        <td class="text-right">{{ number_format($detail['weighted_score'], 4) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 
     <table class="signature-section" style="width: 100%; border: none;">
         <tr>
