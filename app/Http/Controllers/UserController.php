@@ -33,12 +33,14 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'alpha_num', Rule::unique('users', 'username')],
             'password' => ['required', 'string', 'min:8'],
+            'role' => ['required', Rule::in([User::ROLE_GURU, User::ROLE_KEPALA_SEKOLAH])],
         ]);
 
         User::query()->create([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
         ]);
 
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
@@ -50,11 +52,13 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'alpha_num', Rule::unique('users', 'username')->ignore($user)],
             'password' => ['nullable', 'string', 'min:8'],
+            'role' => ['required', Rule::in([User::ROLE_GURU, User::ROLE_KEPALA_SEKOLAH])],
         ]);
 
         $updateData = [
             'name' => $validated['name'],
             'username' => $validated['username'],
+            'role' => $validated['role'],
         ];
 
         if (!empty($validated['password'])) {

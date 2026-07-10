@@ -46,6 +46,13 @@
                         <p class="mt-1.5 text-xs text-zinc-500">Biarkan kosong jika Anda tidak ingin mengubah password user ini.</p>
                     @endif
                 </label>
+                <label class="block">
+                    <span class="text-sm font-semibold text-zinc-700">Peran (Role)</span>
+                    <select name="role" required class="mt-2 h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100">
+                        <option value="guru" @selected(old('role', $editingUser?->role ?? 'guru') === 'guru')>Guru (Akses Penuh)</option>
+                        <option value="kepala_sekolah" @selected(old('role', $editingUser?->role) === 'kepala_sekolah')>Kepala Sekolah (Lihat Saja)</option>
+                    </select>
+                </label>
                 <div class="mt-2 flex gap-3">
                     @if ($editingUser)
                         <a href="{{ route('users.index') }}" class="inline-flex h-11 flex-1 items-center justify-center rounded-lg border border-zinc-200 bg-white text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
@@ -77,6 +84,7 @@
                         <tr>
                             <th class="px-5 py-3">Nama</th>
                             <th class="px-5 py-3">Username</th>
+                            <th class="px-5 py-3">Peran</th>
                             <th class="px-5 py-3 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -85,6 +93,11 @@
                             <tr class="hover:bg-zinc-50 user-row">
                                 <td class="px-5 py-4 font-semibold text-zinc-900 user-name">{{ $user->name }}</td>
                                 <td class="px-5 py-4 text-zinc-600 user-username">{{ $user->username }}</td>
+                                <td class="px-5 py-4">
+                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $user->isGuru() ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-100 text-zinc-600' }}">
+                                        {{ $user->isGuru() ? 'Guru' : 'Kepala Sekolah' }}
+                                    </span>
+                                </td>
                                 <td class="px-5 py-4">
                                     <div class="flex justify-end gap-2">
                                         <a href="{{ route('users.edit', $user) }}" class="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50" title="Edit user">

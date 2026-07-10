@@ -13,6 +13,10 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public const ROLE_GURU = 'guru';
+
+    public const ROLE_KEPALA_SEKOLAH = 'kepala_sekolah';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -22,6 +26,7 @@ class User extends Authenticatable
         'name',
         'username',
         'password',
+        'role',
     ];
 
     /**
@@ -45,5 +50,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isGuru(): bool
+    {
+        return $this->role === self::ROLE_GURU;
+    }
+
+    public function isKepalaSekolah(): bool
+    {
+        return $this->role === self::ROLE_KEPALA_SEKOLAH;
     }
 }

@@ -37,14 +37,16 @@
                 <p class="mt-2 text-5xl font-bold">{{ number_format($topStudent['score'] ?? 0, 4) }}</p>
                 <p class="mt-3 text-sm leading-6 text-zinc-300">Siswa ini memiliki nilai preferensi tertinggi dari normalisasi SAW dan bobot kriteria AHP.</p>
             </div>
-            <form action="{{ route('ranking.calculate') }}" method="POST">
-                @csrf
-                <input type="hidden" name="period" value="{{ $period }}">
-                <button type="submit" @disabled(! $isConsistent) class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white {{ $isConsistent ? 'bg-emerald-700 hover:bg-emerald-800' : 'cursor-not-allowed bg-zinc-400' }}">
-                    <i data-lucide="calculator" class="h-4 w-4"></i>
-                    Hitung Perankingan
-                </button>
-            </form>
+            @can('manage-data')
+                <form action="{{ route('ranking.calculate') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="period" value="{{ $period }}">
+                    <button type="submit" @disabled(! $isConsistent) class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white {{ $isConsistent ? 'bg-emerald-700 hover:bg-emerald-800' : 'cursor-not-allowed bg-zinc-400' }}">
+                        <i data-lucide="calculator" class="h-4 w-4"></i>
+                        Hitung Perankingan
+                    </button>
+                </form>
+            @endcan
         </section>
 
         <section class="min-w-0 rounded-lg border border-zinc-200 bg-white shadow-sm">

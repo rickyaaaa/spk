@@ -24,13 +24,20 @@
             @php
                 $items = [
                     ['label' => 'Dashboard', 'route' => 'dashboard', 'icon' => 'layout-dashboard'],
-                    ['label' => 'Data Siswa', 'route' => 'students.index', 'icon' => 'users'],
-                    ['label' => 'Kriteria AHP', 'route' => 'criteria.index', 'icon' => 'sliders-horizontal'],
-                    ['label' => 'Input Nilai', 'route' => 'scores.index', 'icon' => 'clipboard-pen-line'],
-                    ['label' => 'Perankingan', 'route' => 'ranking.index', 'icon' => 'trophy'],
-                    ['label' => 'Laporan', 'route' => 'reports.index', 'icon' => 'file-down'],
-                    ['label' => 'Data User', 'route' => 'users.index', 'icon' => 'user-cog'],
                 ];
+
+                if (auth()->user()->isGuru()) {
+                    $items[] = ['label' => 'Data Siswa', 'route' => 'students.index', 'icon' => 'users'];
+                    $items[] = ['label' => 'Kriteria AHP', 'route' => 'criteria.index', 'icon' => 'sliders-horizontal'];
+                    $items[] = ['label' => 'Input Nilai', 'route' => 'scores.index', 'icon' => 'clipboard-pen-line'];
+                }
+
+                $items[] = ['label' => 'Perankingan', 'route' => 'ranking.index', 'icon' => 'trophy'];
+                $items[] = ['label' => 'Laporan', 'route' => 'reports.index', 'icon' => 'file-down'];
+
+                if (auth()->user()->isGuru()) {
+                    $items[] = ['label' => 'Data User', 'route' => 'users.index', 'icon' => 'user-cog'];
+                }
             @endphp
 
             <nav class="flex gap-2 overflow-x-auto px-3 pb-4 lg:block lg:space-y-1 lg:overflow-visible lg:px-4">
@@ -48,7 +55,7 @@
 
             <div class="mx-4 mb-5 hidden rounded-lg border border-emerald-100 bg-emerald-50 p-4 lg:block">
                 <p class="text-sm font-semibold text-emerald-950">Metode AHP</p>
-                <p class="mt-1 text-xs leading-5 text-emerald-800">Bobot kriteria, nilai siswa, dan hasil rekomendasi disiapkan dalam satu alur admin.</p>
+                <p class="mt-1 text-xs leading-5 text-emerald-800">Bobot kriteria, nilai siswa, dan hasil rekomendasi disiapkan dalam satu alur kerja.</p>
             </div>
         </aside>
 
@@ -56,7 +63,7 @@
             <header class="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Admin SKB 26</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">{{ auth()->user()->isGuru() ? 'Guru' : 'Kepala Sekolah' }} - SKB 26</p>
                         <h1 class="mt-1 text-2xl font-bold text-zinc-950">@yield('page-title')</h1>
                     </div>
                     <div class="flex items-center gap-2">

@@ -19,39 +19,44 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/students', [StudentController::class, 'index'])->name('students.index');
-    Route::get('/students/template', [StudentController::class, 'exportTemplate'])->name('students.template');
-    Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
-    Route::post('/students', [StudentController::class, 'store'])->name('students.store');
-    Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
-    Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
-    Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
-
-    Route::put('/criteria/comparisons', [CriterionController::class, 'updateComparisons'])->name('criteria.comparisons.update');
-    Route::resource('criteria', CriterionController::class)->except(['create', 'edit']);
-    Route::resource('users', UserController::class)->except(['create']);
-
-    Route::get('/scores', [ScoreController::class, 'index'])->name('scores.index');
-    Route::get('/scores/template', [ScoreController::class, 'exportTemplate'])->name('scores.template');
-    Route::post('/scores/import', [ScoreController::class, 'import'])->name('scores.import');
-    Route::put('/scores', [ScoreController::class, 'update'])->name('scores.update');
-    Route::post('/periods', [ScoreController::class, 'storePeriod'])->name('periods.store');
-
+    // View-only — bisa diakses Guru maupun Kepala Sekolah
     Route::get('/ranking', [RankingController::class, 'index'])->name('ranking.index');
-    Route::post('/ranking/calculate', [RankingController::class, 'calculate'])->name('ranking.calculate');
-
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+
+    // CRUD penuh — hanya role Guru
+    Route::middleware('role:guru')->group(function () {
+        Route::get('/students', [StudentController::class, 'index'])->name('students.index');
+        Route::get('/students/template', [StudentController::class, 'exportTemplate'])->name('students.template');
+        Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
+        Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+        Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
+        Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
+        Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
+
+        Route::put('/criteria/comparisons', [CriterionController::class, 'updateComparisons'])->name('criteria.comparisons.update');
+        Route::resource('criteria', CriterionController::class)->except(['create', 'edit']);
+        Route::resource('users', UserController::class)->except(['create']);
+
+        Route::get('/scores', [ScoreController::class, 'index'])->name('scores.index');
+        Route::get('/scores/template', [ScoreController::class, 'exportTemplate'])->name('scores.template');
+        Route::post('/scores/import', [ScoreController::class, 'import'])->name('scores.import');
+        Route::put('/scores', [ScoreController::class, 'update'])->name('scores.update');
+        Route::post('/periods', [ScoreController::class, 'storePeriod'])->name('periods.store');
+
+        Route::post('/ranking/calculate', [RankingController::class, 'calculate'])->name('ranking.calculate');
+    });
 });
 
-Route::get('/clear-route-cache', function () {
-    \Illuminate\Support\Facades\Artisan::call('route:clear');
-    return 'Route cache berhasil dihapus!';
-});
+Route::middleware(['auth', 'role:guru'])->group(function () {
+    Route::get('/clear-route-cache', function () {
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        return 'Route cache berhasil dihapus!';
+    });
 
-Route::get('/run-migrations', function () {
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    return 'Database migrations ran successfully!';
+    Route::get('/run-migrations', function () {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return 'Database migrations ran successfully!';
+    });
 });
-
 

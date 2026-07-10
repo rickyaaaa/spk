@@ -85,24 +85,28 @@
                     </div>
                 @endforeach
             </div>
-            <a href="{{ route('criteria.index') }}" class="mt-6 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                <i data-lucide="settings" class="h-4 w-4"></i>
-                Atur Bobot
-            </a>
+            @can('manage-data')
+                <a href="{{ route('criteria.index') }}" class="mt-6 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                    <i data-lucide="settings" class="h-4 w-4"></i>
+                    Atur Bobot
+                </a>
+            @endcan
         </section>
     </div>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-3">
-        <a href="{{ route('students.index') }}" class="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md">
-            <i data-lucide="user-plus" class="h-5 w-5 text-emerald-700"></i>
-            <h3 class="mt-4 font-bold">Tambah Data Siswa</h3>
-            <p class="mt-2 text-sm leading-6 text-zinc-500">Lengkapi NIS, nama, kelas, dan profil singkat siswa.</p>
-        </a>
-        <a href="{{ route('scores.index') }}" class="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md">
-            <i data-lucide="clipboard-pen-line" class="h-5 w-5 text-emerald-700"></i>
-            <h3 class="mt-4 font-bold">Input Nilai Siswa</h3>
-            <p class="mt-2 text-sm leading-6 text-zinc-500">Masukkan nilai rapor, tugas, dan kehadiran untuk evaluasi.</p>
-        </a>
+        @can('manage-data')
+            <a href="{{ route('students.index') }}" class="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md">
+                <i data-lucide="user-plus" class="h-5 w-5 text-emerald-700"></i>
+                <h3 class="mt-4 font-bold">Tambah Data Siswa</h3>
+                <p class="mt-2 text-sm leading-6 text-zinc-500">Lengkapi NIS, nama, kelas, dan profil singkat siswa.</p>
+            </a>
+            <a href="{{ route('scores.index') }}" class="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md">
+                <i data-lucide="clipboard-pen-line" class="h-5 w-5 text-emerald-700"></i>
+                <h3 class="mt-4 font-bold">Input Nilai Siswa</h3>
+                <p class="mt-2 text-sm leading-6 text-zinc-500">Masukkan nilai rapor, tugas, dan kehadiran untuk evaluasi.</p>
+            </a>
+        @endcan
         <a href="{{ route('reports.index') }}" class="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md">
             <i data-lucide="file-down" class="h-5 w-5 text-emerald-700"></i>
             <h3 class="mt-4 font-bold">Cetak Laporan</h3>

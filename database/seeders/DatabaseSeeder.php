@@ -19,6 +19,16 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => config('admin.name'),
                 'password' => Hash::make(config('admin.password')),
+                'role' => User::ROLE_GURU,
+            ]
+        );
+
+        User::query()->updateOrCreate(
+            ['username' => 'kepsek'],
+            [
+                'name' => 'Kepala Sekolah',
+                'password' => Hash::make('password'),
+                'role' => User::ROLE_KEPALA_SEKOLAH,
             ]
         );
 
