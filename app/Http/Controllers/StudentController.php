@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -28,14 +29,26 @@ class StudentController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Student::query()->create($this->validated($request));
+        $validated = $this->validated($request);
+
+        DB::transaction(function () use ($validated) {
+            $this->releaseSoftDeletedNis($validated['nis']);
+
+            Student::query()->create($validated);
+        });
 
         return redirect()->route('students.index')->with('success', 'Data siswa berhasil ditambahkan.');
     }
 
     public function update(Request $request, Student $student): RedirectResponse
     {
-        $student->update($this->validated($request, $student));
+        $validated = $this->validated($request, $student);
+
+        DB::transaction(function () use ($student, $validated) {
+            $this->releaseSoftDeletedNis($validated['nis']);
+
+            $student->update($validated);
+        });
 
         return redirect()->route('students.index')->with('success', 'Data siswa berhasil diperbarui.');
     }
@@ -140,7 +153,7 @@ class StudentController extends Controller
         $allowedClasses = ['Paket B - VIII', 'Paket B - IX', 'Paket C - XI', 'Paket C - XII'];
         $allowedStatuses = ['Aktif', 'Evaluasi'];
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($handle, $nisIndex, $nameIndex, $classIndex, $statusIndex, $delimiter, $allowedClasses, $allowedStatuses, &$insertedCount, &$updatedCount, &$errors, &$rowNumber) {
+        DB::transaction(function () use ($handle, $nisIndex, $nameIndex, $classIndex, $statusIndex, $delimiter, $allowedClasses, $allowedStatuses, &$insertedCount, &$updatedCount, &$errors, &$rowNumber) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $rowNumber++;
 
@@ -198,6 +211,7 @@ class StudentController extends Controller
 
                 // Check if student exists to determine update vs insert
                 $existing = Student::query()->where('nis', $nis)->first();
+                $this->releaseSoftDeletedNis($nis);
 
                 Student::query()->updateOrCreate(
                     ['nis' => $nis],
@@ -237,10 +251,26 @@ class StudentController extends Controller
     private function validated(Request $request, ?Student $student = null): array
     {
         return $request->validate([
-            'nis' => ['required', 'string', 'max:30', Rule::unique('students', 'nis')->ignore($student)],
+            'nis' => ['required', 'string', 'max:30', Rule::unique('students', 'nis')->whereNull('deleted_at')->ignore($student)],
             'name' => ['required', 'string', 'max:120'],
             'class_name' => ['required', 'string', Rule::in(['Paket B - VIII', 'Paket B - IX', 'Paket C - XI', 'Paket C - XII'])],
             'status' => ['required', 'string', Rule::in(['Aktif', 'Evaluasi'])],
         ]);
+    }
+
+    private function releaseSoftDeletedNis(string $nis): void
+    {
+        Student::query()
+            ->onlyTrashed()
+            ->where('nis', $nis)
+            ->get()
+            ->each(function (Student $student) use ($nis) {
+                $suffix = '__deleted_'.$student->id;
+                $baseLength = max(1, 30 - strlen($suffix));
+
+                $student->forceFill([
+                    'nis' => substr($nis, 0, $baseLength).$suffix,
+                ])->save();
+            });
     }
 }

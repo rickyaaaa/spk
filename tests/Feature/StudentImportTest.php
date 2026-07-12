@@ -14,7 +14,7 @@ class StudentImportTest extends TestCase
 
     public function test_can_download_student_template(): void
     {
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role' => User::ROLE_GURU]);
 
         $response = $this->actingAs($admin)->get(route('students.template'));
 
@@ -32,7 +32,7 @@ class StudentImportTest extends TestCase
 
     public function test_can_import_students_successfully_with_commas(): void
     {
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role' => User::ROLE_GURU]);
 
         // Let's create an existing student to verify update functionality
         $existing = Student::query()->create([
@@ -69,7 +69,7 @@ class StudentImportTest extends TestCase
 
     public function test_can_import_students_successfully_with_semicolons(): void
     {
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role' => User::ROLE_GURU]);
 
         $csvContent = "nis;nama;kelas;status\n2624008;Dani;Paket C - XII;Evaluasi\n";
         $file = UploadedFile::fake()->createWithContent('students_semicolon.csv', $csvContent);
@@ -89,9 +89,44 @@ class StudentImportTest extends TestCase
         ]);
     }
 
+    public function test_import_can_reuse_nis_from_soft_deleted_student(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_GURU]);
+        $trashedStudent = Student::query()->create([
+            'nis' => '2624010',
+            'name' => 'Siswa Lama',
+            'class_name' => 'Paket C - XI',
+            'status' => 'Aktif',
+        ]);
+
+        $trashedStudent->delete();
+
+        $csvContent = "nis,nama,kelas,status\n2624010,Siswa Baru,Paket C - XI,Aktif\n";
+        $file = UploadedFile::fake()->createWithContent('students_reuse_nis.csv', $csvContent);
+
+        $response = $this->actingAs($admin)->post(route('students.import'), [
+            'file' => $file,
+        ]);
+
+        $response
+            ->assertRedirect(route('students.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('students', [
+            'nis' => '2624010',
+            'name' => 'Siswa Baru',
+            'deleted_at' => null,
+        ]);
+
+        $this->assertStringContainsString(
+            '__deleted_'.$trashedStudent->id,
+            Student::withTrashed()->find($trashedStudent->id)->nis
+        );
+    }
+
     public function test_import_validation_handles_missing_nis_or_invalid_class(): void
     {
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role' => User::ROLE_GURU]);
 
         $csvContent = "nis,nama,kelas,status\n,No NIS,Paket C - XII,Aktif\n2624009,Daus,Invalid Class Name,Aktif\n";
         $file = UploadedFile::fake()->createWithContent('students_errors.csv', $csvContent);
