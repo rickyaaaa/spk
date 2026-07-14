@@ -213,15 +213,23 @@ class AhpService
     public function completionPercentage(string $period = self::DEFAULT_PERIOD): int
     {
         $studentCount = Student::query()->count();
-        $criteriaCount = Criterion::query()->count();
+        $criteriaIds = Criterion::query()->pluck('id');
 
-        if ($studentCount === 0 || $criteriaCount === 0) {
+        if ($studentCount === 0 || $criteriaIds->isEmpty()) {
             return 0;
         }
 
-        $scoreCount = StudentScore::query()->where('evaluation_period', $period)->count();
+        // Hanya hitung nilai yang terhubung ke kriteria yang masih aktif — kriteria yang sudah
+        // dihapus (soft delete) dan dibuat ulang bisa meninggalkan nilai "yatim" yang seharusnya
+        // tidak lagi dihitung.
+        $scoreCount = StudentScore::query()
+            ->where('evaluation_period', $period)
+            ->whereIn('criterion_id', $criteriaIds)
+            ->count();
 
-        return (int) round(($scoreCount / ($studentCount * $criteriaCount)) * 100);
+        $percentage = (int) round(($scoreCount / ($studentCount * $criteriaIds->count())) * 100);
+
+        return min($percentage, 100);
     }
 
     public function currentConsistency(): array
