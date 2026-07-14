@@ -214,12 +214,18 @@ class ScoreController extends Controller
             $fallbackPeriod = AhpService::DEFAULT_PERIOD;
         }
 
+        $allStudents = Student::query()->get();
+        $studentsByNis = $allStudents->keyBy('nis');
+        $studentsByNormalizedNis = $allStudents->keyBy(
+            fn (Student $s) => ltrim($s->nis, '0') !== '' ? ltrim($s->nis, '0') : $s->nis
+        );
+
         $updatedCount = 0;
         $errors = [];
         $rowNumber = 1;
         $periodsToRecalculate = [];
 
-        DB::transaction(function () use ($handle, $nisIndex, $periodIndex, $criterionIndexes, $fallbackPeriod, $delimiter, &$updatedCount, &$errors, &$rowNumber, &$periodsToRecalculate) {
+        DB::transaction(function () use ($handle, $nisIndex, $periodIndex, $criterionIndexes, $fallbackPeriod, $delimiter, $studentsByNis, $studentsByNormalizedNis, &$updatedCount, &$errors, &$rowNumber, &$periodsToRecalculate) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $rowNumber++;
 
@@ -239,7 +245,14 @@ class ScoreController extends Controller
                     $period = $fallbackPeriod;
                 }
 
-                $student = Student::query()->where('nis', $nis)->first();
+                // Excel sering menghilangkan angka nol di depan NIS saat file dibuka/disimpan ulang,
+                // jadi jika pencocokan persis gagal, coba cocokkan tanpa nol di depan pada kedua sisi.
+                $student = $studentsByNis->get($nis);
+                if (! $student) {
+                    $normalizedNis = ltrim($nis, '0');
+                    $student = $studentsByNormalizedNis->get($normalizedNis !== '' ? $normalizedNis : $nis);
+                }
+
                 if (! $student) {
                     $errors[] = "Baris {$rowNumber}: Siswa dengan NIS '{$nis}' tidak ditemukan.";
 

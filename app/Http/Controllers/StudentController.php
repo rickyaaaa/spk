@@ -153,7 +153,13 @@ class StudentController extends Controller
         $allowedClasses = ['Paket B - VIII', 'Paket B - IX', 'Paket C - XI', 'Paket C - XII'];
         $allowedStatuses = ['Aktif', 'Evaluasi'];
 
-        DB::transaction(function () use ($handle, $nisIndex, $nameIndex, $classIndex, $statusIndex, $delimiter, $allowedClasses, $allowedStatuses, &$insertedCount, &$updatedCount, &$errors, &$rowNumber) {
+        $allStudents = Student::query()->get();
+        $studentsByNis = $allStudents->keyBy('nis');
+        $studentsByNormalizedNis = $allStudents->keyBy(
+            fn (Student $s) => ltrim($s->nis, '0') !== '' ? ltrim($s->nis, '0') : $s->nis
+        );
+
+        DB::transaction(function () use ($handle, $nisIndex, $nameIndex, $classIndex, $statusIndex, $delimiter, $allowedClasses, $allowedStatuses, $studentsByNis, $studentsByNormalizedNis, &$insertedCount, &$updatedCount, &$errors, &$rowNumber) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $rowNumber++;
 
@@ -209,12 +215,20 @@ class StudentController extends Controller
                     }
                 }
 
-                // Check if student exists to determine update vs insert
-                $existing = Student::query()->where('nis', $nis)->first();
-                $this->releaseSoftDeletedNis($nis);
+                // Check if student exists to determine update vs insert. Excel sering menghilangkan
+                // angka nol di depan NIS, jadi jika pencocokan persis gagal, coba cocokkan tanpa nol
+                // di depan agar tidak membuat data siswa duplikat.
+                $existing = $studentsByNis->get($nis);
+                if (! $existing) {
+                    $normalizedNis = ltrim($nis, '0');
+                    $existing = $studentsByNormalizedNis->get($normalizedNis !== '' ? $normalizedNis : $nis);
+                }
+
+                $nisToPersist = $existing ? $existing->nis : $nis;
+                $this->releaseSoftDeletedNis($nisToPersist);
 
                 Student::query()->updateOrCreate(
-                    ['nis' => $nis],
+                    ['nis' => $nisToPersist],
                     [
                         'name' => $name,
                         'class_name' => $className,
