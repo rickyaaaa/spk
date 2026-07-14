@@ -103,7 +103,9 @@ class ScoreController extends Controller
             fputcsv($handle, $headers);
 
             foreach ($students as $student) {
-                $row = [$student->nis, $student->name, $period];
+                // Prefix NIS dengan tanda kutip satu agar Excel memperlakukannya sebagai teks,
+                // bukan angka, sehingga nol di depan tidak hilang saat file dibuka/disimpan ulang.
+                $row = ["'".$student->nis, $student->name, $period];
                 $scores = $studentScores->get($student->id)?->keyBy('criterion_id') ?? collect();
 
                 foreach ($criteria as $criterion) {
@@ -233,7 +235,7 @@ class ScoreController extends Controller
                     continue;
                 }
 
-                $nis = trim((string) ($row[$nisIndex] ?? ''));
+                $nis = ltrim(trim((string) ($row[$nisIndex] ?? '')), "'");
                 if (empty($nis)) {
                     $errors[] = "Baris {$rowNumber}: NIS kosong, baris dilewati.";
 

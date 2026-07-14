@@ -167,7 +167,7 @@ class StudentController extends Controller
                     continue;
                 }
 
-                $nis = trim((string) ($row[$nisIndex] ?? ''));
+                $nis = ltrim(trim((string) ($row[$nisIndex] ?? '')), "'");
                 $name = trim((string) ($row[$nameIndex] ?? ''));
                 $className = trim((string) ($row[$classIndex] ?? ''));
                 $status = trim((string) ($row[$statusIndex] ?? ''));
